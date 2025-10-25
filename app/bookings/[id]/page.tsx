@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
+import { wsClient } from "@/lib/websocket-client";
 import { useRouter } from "next/navigation";
 import { Loader2, Send, Video, ArrowLeft } from "lucide-react";
 import { VideoCall } from "@/components/VideoCall";
@@ -178,11 +179,14 @@ export default function BookingChatPage({
     const providerId = booking.provider.id;
     const seekerId = booking.seeker.id;
 
+    console.log("🔌 Setting up realtime subscription for chat:", id);
+
     // Listen to new messages in the 'messages' table
     const channel = supabase
       .channel(`chat_room:${id}`, {
         config: {
-          broadcast: { self: false }, // Don't receive own messages via broadcast
+          broadcast: { self: false },
+          presence: { key: currentUser.id },
         },
       })
       .on(
@@ -191,8 +195,11 @@ export default function BookingChatPage({
           event: "INSERT",
           schema: "public",
           table: "messages",
+          // Filter to only messages relevant to this chat
+          filter: `sender_id=in.(${providerId},${seekerId})`,
         },
         (payload) => {
+          console.log("📨 New message received via realtime:", payload);
           const newMessage = payload.new as Message;
 
           // Verify the message belongs to this chat (between provider and seeker)
@@ -202,14 +209,22 @@ export default function BookingChatPage({
             (newMessage.sender_id === seekerId &&
               newMessage.receiver_id === providerId);
 
-          if (!isRelevant) return;
+          if (!isRelevant) {
+            console.log("❌ Message not relevant to this chat, ignoring");
+            return;
+          }
+
+          console.log("✅ Adding new message to state:", newMessage.id);
 
           // Add message to state if not already present
           setMessages((currentMessages) => {
             const exists = currentMessages.some(
               (msg) => msg.id === newMessage.id
             );
-            if (exists) return currentMessages;
+            if (exists) {
+              console.log("⚠️ Message already exists, skipping");
+              return currentMessages;
+            }
             return [...currentMessages, newMessage];
           });
 
@@ -246,8 +261,10 @@ export default function BookingChatPage({
           event: "UPDATE",
           schema: "public",
           table: "messages",
+          filter: `sender_id=in.(${providerId},${seekerId})`,
         },
         (payload) => {
+          console.log("📝 Message updated via realtime:", payload);
           const updatedMessage = payload.new as Message;
 
           // Verify the message belongs to this chat
@@ -275,6 +292,7 @@ export default function BookingChatPage({
           filter: `id=eq.${id}`,
         },
         (payload) => {
+          console.log("📅 Booking updated via realtime:", payload);
           const updatedBooking = payload.new as any;
 
           // Update booking state
@@ -294,11 +312,22 @@ export default function BookingChatPage({
         }
       )
       .subscribe((status) => {
+        console.log("🔔 Subscription status changed:", status);
         if (status === "SUBSCRIBED") {
           console.log("✅ Realtime subscription active for booking:", id);
+          toast.success("Connected to real-time chat", { duration: 2000 });
         } else if (status === "CHANNEL_ERROR") {
           console.error("❌ Realtime subscription error for booking:", id);
-          toast.error("Connection issue. Messages may be delayed.");
+          toast.error("Connection issue. Messages may be delayed.", {
+            description: "Try refreshing the page if messages don't appear",
+          });
+        } else if (status === "TIMED_OUT") {
+          console.error("⏱️ Realtime subscription timed out for booking:", id);
+          toast.error("Connection timed out. Trying to reconnect...", {
+            duration: 3000,
+          });
+        } else if (status === "CLOSED") {
+          console.warn("🔌 Realtime subscription closed for booking:", id);
         }
       });
 

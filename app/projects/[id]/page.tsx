@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { supabase } from "@/lib/supabase";
+import { wsClient } from "@/lib/websocket-client";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -31,6 +32,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { ChatModal } from "@/components/ChatModal";
+import { ProjectManagementModal } from "@/components/ProjectManagementModal";
 
 type Project = {
   id: number;
@@ -78,9 +81,50 @@ export default function ProjectDetailPage({
   const [isParticipant, setIsParticipant] = useState(false);
   const [joining, setJoining] = useState(false);
 
+  // Modal states
+  const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [selectedChatUser, setSelectedChatUser] = useState<{
+    id: string;
+    name: string;
+    avatar: string;
+  } | null>(null);
+  const [managementModalOpen, setManagementModalOpen] = useState(false);
+
   useEffect(() => {
     fetchProjectDetails();
   }, [id]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    // Connect WebSocket for real-time participant count updates
+    wsClient.connect(currentUser.id);
+
+    const handleParticipantUpdate = (data: any) => {
+      if (
+        data.type === "participant_joined" ||
+        data.type === "participant_left"
+      ) {
+        if (data.projectId === parseInt(id)) {
+          // Refresh participant count
+          fetchProjectDetails();
+          toast.info(
+            data.type === "participant_joined"
+              ? "A new member joined the project"
+              : "A member left the project"
+          );
+        }
+      }
+    };
+
+    wsClient.on("participant_joined", handleParticipantUpdate);
+    wsClient.on("participant_left", handleParticipantUpdate);
+
+    return () => {
+      wsClient.off("participant_joined", handleParticipantUpdate);
+      wsClient.off("participant_left", handleParticipantUpdate);
+    };
+  }, [currentUser, id]);
 
   const fetchProjectDetails = async () => {
     try {
@@ -189,6 +233,13 @@ export default function ProjectDetailPage({
         description: "You are now part of this community project",
       });
 
+      // Broadcast participant joined
+      wsClient.send({
+        type: "participant_joined",
+        projectId: parseInt(id),
+        userId: currentUser.id,
+      });
+
       fetchProjectDetails();
     } catch (error: any) {
       toast.error("Failed to join project", {
@@ -215,6 +266,13 @@ export default function ProjectDetailPage({
 
       toast.success("Left Project", {
         description: "You have left this community project",
+      });
+
+      // Broadcast participant left
+      wsClient.send({
+        type: "participant_left",
+        projectId: parseInt(id),
+        userId: currentUser.id,
       });
 
       fetchProjectDetails();
@@ -247,6 +305,50 @@ export default function ProjectDetailPage({
       .join("")
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const handleManageProject = () => {
+    setManagementModalOpen(true);
+  };
+
+  const handleMessageCreator = () => {
+    if (!currentUser) {
+      toast.error("Please login to send messages");
+      return;
+    }
+
+    // Prevent self-chat
+    if (currentUser.id === project?.creator.id) {
+      toast.error("You cannot chat with yourself");
+      return;
+    }
+
+    setSelectedChatUser({
+      id: project!.creator.id,
+      name: project!.creator.full_name,
+      avatar: project!.creator.avatar_url,
+    });
+    setChatModalOpen(true);
+  };
+
+  const handleMessageParticipant = (participant: Participant) => {
+    if (!currentUser) {
+      toast.error("Please login to send messages");
+      return;
+    }
+
+    // Prevent self-chat
+    if (currentUser.id === participant.user_id) {
+      toast.error("You cannot chat with yourself");
+      return;
+    }
+
+    setSelectedChatUser({
+      id: participant.user_id,
+      name: participant.user.full_name,
+      avatar: participant.user.avatar_url,
+    });
+    setChatModalOpen(true);
   };
 
   if (loading) {
@@ -328,6 +430,7 @@ export default function ProjectDetailPage({
                 <Button
                   variant="outline"
                   className="border-emerald-500 text-emerald-700 hover:bg-emerald-50"
+                  onClick={handleManageProject}
                 >
                   <Edit className="w-4 h-4 mr-2" />
                   Manage Project
@@ -454,6 +557,7 @@ export default function ProjectDetailPage({
                       variant="outline"
                       size="sm"
                       className="mt-3 text-emerald-600 border-emerald-300 hover:bg-emerald-50"
+                      onClick={handleMessageCreator}
                     >
                       <MessageCircle className="w-4 h-4 mr-2" />
                       Message Creator
@@ -509,6 +613,19 @@ export default function ProjectDetailPage({
                               : "Member"}
                           </p>
                         </div>
+                        {currentUser &&
+                          currentUser.id !== participant.user_id && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                handleMessageParticipant(participant)
+                              }
+                              className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                            </Button>
+                          )}
                       </div>
                     ))}
                   </div>
@@ -516,27 +633,32 @@ export default function ProjectDetailPage({
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
-            {isParticipant && (
-              <Card className="bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200">
-                <CardHeader>
-                  <CardTitle className="text-emerald-900">
-                    You're a Member!
-                  </CardTitle>
-                  <CardDescription className="text-emerald-700">
-                    Stay connected with the team
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Button className="w-full bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-100">
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Open Discussion
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+            {/* Quick Actions removed - Open Discussion feature disabled */}
           </div>
         </div>
+
+        {/* Modals */}
+        {selectedChatUser && (
+          <ChatModal
+            isOpen={chatModalOpen}
+            onClose={() => {
+              setChatModalOpen(false);
+              setSelectedChatUser(null);
+            }}
+            recipientId={selectedChatUser.id}
+            recipientName={selectedChatUser.name}
+            recipientAvatar={selectedChatUser.avatar}
+          />
+        )}
+
+        {isCreator && (
+          <ProjectManagementModal
+            isOpen={managementModalOpen}
+            onClose={() => setManagementModalOpen(false)}
+            projectId={parseInt(id)}
+            onProjectUpdated={fetchProjectDetails}
+          />
+        )}
       </motion.div>
     </div>
   );

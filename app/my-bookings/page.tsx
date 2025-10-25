@@ -16,6 +16,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ChatModal } from "@/components/ChatModal";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -54,6 +55,15 @@ export default function MyBookingsPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"seeker" | "provider">("seeker");
   const [showReviewFor, setShowReviewFor] = useState<number | null>(null);
+
+  // Chat modal state
+  const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [selectedChatUser, setSelectedChatUser] = useState<{
+    id: string;
+    name: string;
+    avatar: string;
+    bookingId: number;
+  } | null>(null);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -312,7 +322,15 @@ export default function MyBookingsPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => router.push(`/bookings/${booking.id}`)}
+                          onClick={() => {
+                            setSelectedChatUser({
+                              id: otherPerson.id,
+                              name: otherPerson.full_name,
+                              avatar: otherPerson.avatar_url,
+                              bookingId: booking.id,
+                            });
+                            setChatModalOpen(true);
+                          }}
                         >
                           <MessageSquare className="w-4 h-4 mr-1" />
                           Chat
@@ -402,6 +420,21 @@ export default function MyBookingsPage() {
           )}
         </div>
       </ScrollArea>
+
+      {/* Chat Modal */}
+      {selectedChatUser && (
+        <ChatModal
+          isOpen={chatModalOpen}
+          onClose={() => {
+            setChatModalOpen(false);
+            setSelectedChatUser(null);
+          }}
+          recipientId={selectedChatUser.id}
+          recipientName={selectedChatUser.name}
+          recipientAvatar={selectedChatUser.avatar}
+          bookingId={selectedChatUser.bookingId}
+        />
+      )}
     </div>
   );
 }

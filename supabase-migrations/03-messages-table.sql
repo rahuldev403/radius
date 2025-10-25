@@ -70,3 +70,13 @@ USING (
 -- Grant necessary permissions
 GRANT SELECT, INSERT, UPDATE, DELETE ON messages TO authenticated;
 GRANT USAGE, SELECT ON SEQUENCE messages_id_seq TO authenticated;
+
+-- =============================================
+-- REALTIME PUBLICATION
+-- =============================================
+-- Enable realtime for the messages table
+-- This allows real-time subscriptions to work
+ALTER PUBLICATION supabase_realtime ADD TABLE messages;
+
+-- Note: If you get an error about publication not existing, run:
+-- CREATE PUBLICATION supabase_realtime FOR TABLE messages;
