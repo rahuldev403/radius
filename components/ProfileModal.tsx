@@ -18,7 +18,6 @@ import {
   Loader2,
   Camera,
 } from "lucide-react";
-import { toast } from "sonner";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 interface ProfileModalProps {
@@ -55,9 +54,6 @@ export function ProfileModal({
   useEffect(() => {
     if (user && isOpen) {
       loadProfile();
-      // Reset location state when modal opens
-      setHasSetLocation(false);
-      setMessage("");
     }
   }, [user, isOpen]);
 
@@ -66,7 +62,7 @@ export function ProfileModal({
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("full_name, bio, avatar_url")
+      .select("full_name, bio, avatar_url, location")
       .eq("id", user.id)
       .single();
 
@@ -74,6 +70,12 @@ export function ProfileModal({
       setFullName(profile.full_name || "");
       setBio(profile.bio || "");
       setAvatarUrl(profile.avatar_url || "");
+
+      // Check if location is already set
+      if (profile.location) {
+        setHasSetLocation(true);
+        setCurrentStep(2); // Skip to step 2 if updating
+      }
     }
   };
 
@@ -81,123 +83,46 @@ export function ProfileModal({
   const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       setUploading(true);
-      setMessage("");
 
       if (!event.target.files || event.target.files.length === 0) {
-        toast.error("No file selected");
         return;
       }
 
       const file = event.target.files[0];
-      console.log("Uploading file:", file.name, file.type, file.size);
-
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("File too large", {
-          description: "Please choose an image under 5MB",
-        });
-        return;
-      }
-
-      // Validate file type
-      if (!file.type.startsWith("image/")) {
-        toast.error("Invalid file type", {
-          description: "Please upload an image file",
-        });
-        return;
-      }
-
-      if (!user?.id) {
-        toast.error("User not authenticated", {
-          description: "Please sign in again",
-        });
-        return;
-      }
-
       const fileExt = file.name.split(".").pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`; // Changed: removed 'avatars/' prefix as bucket already defines the path
-
-      console.log("Upload path:", filePath);
-
-      // Delete old avatar if exists
-      if (avatarUrl) {
-        try {
-          // Extract filename from URL
-          const urlParts = avatarUrl.split("/");
-          const oldFileName = urlParts[urlParts.length - 1].split("?")[0];
-          console.log("Deleting old avatar:", oldFileName);
-
-          const { error: deleteError } = await supabase.storage
-            .from("avatars")
-            .remove([oldFileName]);
-
-          if (deleteError) {
-            console.log("Delete error (non-critical):", deleteError);
-          }
-        } catch (err) {
-          console.log("No old avatar to delete or delete failed:", err);
-        }
-      }
+      const fileName = `${user?.id}-${Math.random()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
 
       // Upload to Supabase Storage
-      console.log("Starting upload to bucket 'avatars'...");
-      const { error: uploadError, data: uploadData } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: true,
-        });
+        .upload(filePath, file, { upsert: true });
 
       if (uploadError) {
-        console.error("Upload error details:", uploadError);
-        throw new Error(
-          uploadError.message || "Failed to upload image to storage"
-        );
+        throw uploadError;
       }
-
-      console.log("Upload successful:", uploadData);
 
       // Get public URL
       const {
         data: { publicUrl },
       } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
-      console.log("Public URL:", publicUrl);
-
-      // Add timestamp to force refresh
-      const refreshedUrl = `${publicUrl}?t=${Date.now()}`;
-
       // Update profile with avatar URL
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ avatar_url: publicUrl })
-        .eq("id", user.id);
+        .eq("id", user?.id);
 
       if (updateError) {
-        console.error("Profile update error:", updateError);
-        throw new Error(
-          updateError.message || "Failed to update profile with new avatar"
-        );
+        throw updateError;
       }
 
-      console.log("Profile updated successfully");
-      setAvatarUrl(refreshedUrl);
-      toast.success("Avatar uploaded!", {
-        description: "Your profile picture has been updated",
-      });
+      setAvatarUrl(publicUrl);
+      setMessage("Avatar updated successfully!");
     } catch (error: any) {
-      console.error("Avatar upload error:", error);
-      toast.error("Upload failed", {
-        description:
-          error.message || "Please ensure storage bucket is set up correctly",
-      });
+      alert(error.message);
     } finally {
       setUploading(false);
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
     }
   };
 
@@ -222,9 +147,26 @@ export function ProfileModal({
       setMessage("Error updating profile");
       setLoading(false);
     } else {
-      setMessage("Profile saved! Now set your location.");
-      setCurrentStep(2);
-      setLoading(false);
+      // Check if user already has location set
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("location")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.location) {
+        // Location already exists, close modal
+        setMessage("Profile updated successfully!");
+        setLoading(false);
+        setTimeout(() => {
+          onClose();
+        }, 1000);
+      } else {
+        // No location, prompt to set it
+        setMessage("Profile saved! Now set your location.");
+        setCurrentStep(2);
+        setLoading(false);
+      }
     }
   };
 
@@ -243,24 +185,23 @@ export function ProfileModal({
     if (error) {
       setMessage("Error setting location");
       setLoading(false);
-      toast.error("Failed to update location", {
-        description: "Please try again or check your permissions.",
-      });
     } else {
-      setMessage("Location updated successfully!");
+      setMessage("Location set successfully!");
       setHasSetLocation(true);
       setLoading(false);
-      toast.success("Location Updated!", {
-        description: "Your location has been updated successfully.",
-      });
 
       if (isOnboarding && fullName) {
         setTimeout(() => {
           window.location.href = "/home";
         }, 1500);
+      } else {
+        // Close modal after location update if not onboarding
+        setTimeout(() => {
+          onClose();
+        }, 1000);
       }
     }
-  }, [user, geoData, isOnboarding, fullName]);
+  }, [user, geoData, isOnboarding, fullName, onClose]);
 
   useEffect(() => {
     if (geoData && user) {
@@ -273,7 +214,7 @@ export function ProfileModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -356,15 +297,9 @@ export function ProfileModal({
                   {/* Avatar Upload */}
                   <div className="flex flex-col items-center space-y-4">
                     <div className="relative group">
-                      <Avatar className="w-32 h-32 border-4 border-emerald-100 shadow-lg ring-2 ring-emerald-500/20">
-                        {avatarUrl ? (
-                          <AvatarImage
-                            src={avatarUrl}
-                            alt={fullName || "User"}
-                            className="object-cover"
-                          />
-                        ) : null}
-                        <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-500 text-white text-3xl font-bold">
+                      <Avatar className="w-24 h-24 border-4 border-emerald-100">
+                        <AvatarImage src={avatarUrl} alt={fullName || "User"} />
+                        <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-500 text-white text-2xl">
                           {fullName
                             ? fullName
                                 .split(" ")
@@ -379,14 +314,13 @@ export function ProfileModal({
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={uploading}
-                        className="absolute bottom-0 right-0 p-3 bg-gradient-to-br from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-full shadow-lg transition-all group-hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Upload profile picture"
-                        aria-label="Upload profile picture"
+                        className="absolute bottom-0 right-0 p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg transition-all group-hover:scale-110"
+                        title="Upload avatar"
                       >
                         {uploading ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                          <Camera className="w-5 h-5" />
+                          <Camera className="w-4 h-4" />
                         )}
                       </button>
                     </div>
@@ -396,17 +330,10 @@ export function ProfileModal({
                       accept="image/*"
                       onChange={uploadAvatar}
                       className="hidden"
-                      id="avatar-upload"
-                      aria-label="Avatar image upload"
                     />
-                    <div className="text-center">
-                      <p className="text-sm font-medium text-gray-700">
-                        {uploading ? "Uploading..." : "Profile Picture"}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Click camera icon to upload (max 5MB)
-                      </p>
-                    </div>
+                    <p className="text-xs text-gray-500">
+                      Click camera to upload photo
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -523,10 +450,10 @@ export function ProfileModal({
             </div>
 
             {/* Right Side - Lottie Animation */}
-            <div className="hidden lg:flex lg:w-[45%] bg-linear-to-br from-emerald-500 via-teal-500 to-cyan-500 items-center justify-center p-8">
+            <div className="hidden lg:flex lg:w-[45%] bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 items-center justify-center p-8">
               <div className="text-center text-white space-y-6">
                 {/* Lottie Animation Container */}
-                <div className="w-80 h-80 mx-auto flex items-center justify-center">
+                <div className="w-80 h-80 mx-auto">
                   <DotLottieReact
                     src="https://lottie.host/c925259b-e34f-4ab5-ab68-ea151c9cb447/IRJhod0Nzk.lottie"
                     loop

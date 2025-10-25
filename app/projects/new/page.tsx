@@ -62,7 +62,7 @@ export default function NewProjectPage() {
         throw new Error("You must be logged in to create a project.");
       }
 
-      const { error } = await supabase.from("community_projects").insert({
+      const { data, error } = await supabase.from("community_projects").insert({
         creator_id: user.id,
         title: formData.title,
         description: formData.description,
@@ -77,7 +77,15 @@ export default function NewProjectPage() {
         status: "planning",
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error details:", {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+        });
+        throw error;
+      }
 
       toast.success("Project Created!", {
         description: "Your community project is now live.",
@@ -85,10 +93,17 @@ export default function NewProjectPage() {
 
       router.push("/projects");
     } catch (error: any) {
+      const errorMessage =
+        error?.message || error?.details || "Please try again.";
       toast.error("Failed to create project", {
-        description: error.message || "Please try again.",
+        description: errorMessage,
       });
-      console.error("Error creating project:", error);
+      console.warn("Error creating project:", {
+        error,
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+      });
     } finally {
       setLoading(false);
     }

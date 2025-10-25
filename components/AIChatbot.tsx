@@ -24,8 +24,8 @@ type Message = {
 };
 
 interface AIChatbotProps {
-  isOpen: boolean;
-  onClose: () => void;
+  variant?: "floating" | "navbar";
+  isCollapsed?: boolean;
 }
 
 const SUGGESTED_QUESTIONS = [
@@ -61,7 +61,11 @@ const PREDEFINED_ANSWERS: Record<string, string> = {
     "To update your profile:\n1. Click 'Profile' button in the header\n2. Edit your name, bio, or location\n3. Click 'Save Changes'\n\nYour location determines which services you see on the map!",
 };
 
-export function AIChatbot({ isOpen, onClose }: AIChatbotProps) {
+export function AIChatbot({
+  variant = "floating",
+  isCollapsed = false,
+}: AIChatbotProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
@@ -73,6 +77,7 @@ export function AIChatbot({ isOpen, onClose }: AIChatbotProps) {
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -214,143 +219,369 @@ export function AIChatbot({ isOpen, onClose }: AIChatbotProps) {
     toast.success("Chat cleared!");
   };
 
-  if (!isOpen) return null;
+  // Navbar variant (compact button)
+  if (variant === "navbar") {
+    return (
+      <>
+        <Button
+          onClick={() => setIsOpen(true)}
+          variant="ghost"
+          className={`w-full ${
+            isCollapsed ? "justify-center px-2" : "justify-start px-4"
+          } h-11 text-purple-600 hover:text-white hover:bg-linear-to-r hover:from-purple-500 hover:to-indigo-600 relative group rounded-xl transition-all duration-200`}
+        >
+          <MessageCircle
+            className={`${
+              isCollapsed ? "" : "mr-3"
+            } w-5 h-5 group-hover:scale-110 transition-transform`}
+          />
+          {!isCollapsed && <span className="font-medium">AI Help</span>}
 
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: "spring", duration: 0.5 }}
-            className="relative w-full max-w-4xl h-[700px] bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
-          >
-            {/* Header */}
-            <div className="bg-linear-to-r from-emerald-600 to-teal-600 text-white p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white/20 rounded-xl">
-                    <Sparkles className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold">AI Assistant</h2>
-                    <p className="text-sm text-emerald-50">
-                      Ask me anything about Radius!
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleClearChat}
-                    className="text-white hover:bg-white/20 h-9 w-9"
-                    title="Clear chat"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </Button>
-                  <button
-                    onClick={onClose}
-                    className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
-                    aria-label="Close modal"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
+          {/* Tooltip for collapsed state */}
+          {isCollapsed && (
+            <div className="absolute left-full ml-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-xl">
+              AI Help
+              <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
             </div>
+          )}
+        </Button>
 
-            {/* Chat Messages */}
-            <div
-              className="flex-1 overflow-auto p-6 space-y-4 bg-gray-50"
-              ref={scrollRef}
-            >
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${
-                    message.role === "user" ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`max-w-[75%] rounded-2xl p-4 ${
-                      message.role === "user"
-                        ? "bg-linear-to-r from-emerald-600 to-teal-600 text-white"
-                        : "bg-white text-gray-900 border shadow-sm"
-                    }`}
-                  >
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap wrap-break-word">
-                      {message.content}
-                    </p>
-                    <span className="text-xs opacity-60 mt-2 block">
-                      {message.timestamp.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  </div>
-                </div>
-              ))}
+        <AnimatePresence>
+          {isOpen && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsOpen(false)}
+                className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[9998]"
+              />
 
-              {isTyping && (
-                <div className="flex justify-start">
-                  <div className="bg-white rounded-2xl p-4 border shadow-sm">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.1s]" />
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+              {/* Sidebar */}
+              <motion.div
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                className={`fixed right-0 top-0 h-screen bg-white shadow-2xl z-[9999] flex flex-col ${
+                  isFullscreen ? "w-full" : "w-96"
+                }`}
+              >
+                <div className="bg-linear-to-r from-emerald-600 to-teal-600 text-white p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5" />
+                      <h2 className="text-lg font-semibold">AI Assistant</h2>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setIsFullscreen(!isFullscreen)}
+                        className="text-white hover:bg-white/20 h-8 w-8"
+                        title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+                      >
+                        {isFullscreen ? (
+                          <Minimize2 className="h-4 w-4" />
+                        ) : (
+                          <Maximize2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleClearChat}
+                        className="text-white hover:bg-white/20 h-8 w-8"
+                        title="Clear chat"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setIsOpen(false)}
+                        className="text-white hover:bg-white/20 h-8 w-8"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
+                  <p className="text-sm text-emerald-50">
+                    Ask me anything about Radius!
+                  </p>
                 </div>
-              )}
-            </div>
 
-            {/* Input Area */}
-            <div className="border-t p-6 bg-white">
-              <div className="flex gap-3 mb-4">
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSend();
-                    }
-                  }}
-                  placeholder="Type your question..."
-                  className="flex-1 text-base h-12"
-                  disabled={isTyping}
-                />
-                <Button
-                  onClick={handleSend}
-                  disabled={!input.trim() || isTyping}
-                  className="bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 h-12 px-6"
+                {/* Chat Messages */}
+                <div
+                  className="flex-1 overflow-auto p-4 space-y-4 bg-gray-50"
+                  ref={scrollRef}
                 >
-                  <Send className="h-5 w-5" />
-                </Button>
+                  {messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex ${
+                        message.role === "user"
+                          ? "justify-end"
+                          : "justify-start"
+                      }`}
+                    >
+                      <div
+                        className={`max-w-[85%] rounded-lg p-3 ${
+                          message.role === "user"
+                            ? "bg-linear-to-r from-emerald-600 to-teal-600 text-white"
+                            : "bg-white text-gray-900 border shadow-sm"
+                        }`}
+                      >
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                          {message.content}
+                        </p>
+                        <span className="text-xs opacity-60 mt-1 block">
+                          {message.timestamp.toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+
+                  {isTyping && (
+                    <div className="flex justify-start">
+                      <div className="bg-white rounded-lg p-3 border shadow-sm">
+                        <div className="flex gap-1">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.1s]" />
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Input Area */}
+                <div className="border-t p-4 bg-white">
+                  <div className="flex gap-2">
+                    <Input
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSend();
+                        }
+                      }}
+                      placeholder="Type your question..."
+                      className="flex-1"
+                      disabled={isTyping}
+                    />
+                    <Button
+                      onClick={handleSend}
+                      disabled={!input.trim() || isTyping}
+                      className="bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+                      size="icon"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {messages.length === 1 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {SUGGESTED_QUESTIONS.map((q) => (
+                        <Button
+                          key={q}
+                          onClick={() => handleSuggestedQuestion(q)}
+                          variant="outline"
+                          size="sm"
+                          className="text-xs border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300 text-gray-700"
+                        >
+                          {q}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </>
+    );
+  }
+
+  // Floating variant (bottom-right button)
+  if (!isOpen) {
+    return (
+      <Button
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-2xl bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 z-9999 transition-all duration-200 hover:scale-110"
+        size="icon"
+        title="Open AI Assistant"
+      >
+        <MessageCircle className="h-6 w-6 text-white" />
+      </Button>
+    );
+  }
+
+  return (
+    <>
+      {/* Backdrop */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[9998]"
+            />
+
+            {/* Sidebar */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className={`fixed right-0 top-0 bottom-0 bg-white shadow-2xl z-[9999] flex flex-col ${
+                isFullscreen ? "w-full" : "w-96"
+              }`}
+            >
+              <div className="bg-linear-to-r from-emerald-600 to-teal-600 text-white p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5" />
+                    <h2 className="text-lg font-semibold">AI Assistant</h2>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setIsFullscreen(!isFullscreen)}
+                      className="text-white hover:bg-white/20 h-8 w-8"
+                      title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+                    >
+                      {isFullscreen ? (
+                        <Minimize2 className="h-4 w-4" />
+                      ) : (
+                        <Maximize2 className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleClearChat}
+                      className="text-white hover:bg-white/20 h-8 w-8"
+                      title="Clear chat"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setIsOpen(false)}
+                      className="text-white hover:bg-white/20 h-8 w-8"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-sm text-emerald-50">
+                  Ask me anything about Radius!
+                </p>
               </div>
 
-              {messages.length === 1 && (
-                <div className="flex flex-wrap gap-2">
-                  {SUGGESTED_QUESTIONS.map((q) => (
-                    <Button
-                      key={q}
-                      onClick={() => handleSuggestedQuestion(q)}
-                      variant="outline"
-                      size="sm"
-                      className="text-xs border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300 text-gray-700"
+              {/* Chat Messages */}
+              <div
+                className="flex-1 overflow-auto p-4 space-y-4 bg-gray-50"
+                ref={scrollRef}
+              >
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${
+                      message.role === "user" ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    <div
+                      className={`max-w-[85%] rounded-lg p-3 ${
+                        message.role === "user"
+                          ? "bg-linear-to-r from-emerald-600 to-teal-600 text-white"
+                          : "bg-white text-gray-900 border shadow-sm"
+                      }`}
                     >
-                      {q}
-                    </Button>
-                  ))}
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap wrap-break-word">
+                        {message.content}
+                      </p>
+                      <span className="text-xs opacity-60 mt-1 block">
+                        {message.timestamp.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+
+                {isTyping && (
+                  <div className="flex justify-start">
+                    <div className="bg-white rounded-lg p-3 border shadow-sm">
+                      <div className="flex gap-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.1s]" />
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Input Area */}
+              <div className="border-t p-4 bg-white">
+                <div className="flex gap-2">
+                  <Input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSend();
+                      }
+                    }}
+                    placeholder="Type your question..."
+                    className="flex-1"
+                    disabled={isTyping}
+                  />
+                  <Button
+                    onClick={handleSend}
+                    disabled={!input.trim() || isTyping}
+                    className="bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+                    size="icon"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
                 </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+
+                {messages.length === 1 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {SUGGESTED_QUESTIONS.map((q) => (
+                      <Button
+                        key={q}
+                        onClick={() => handleSuggestedQuestion(q)}
+                        variant="outline"
+                        size="sm"
+                        className="text-xs border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300 text-gray-700"
+                      >
+                        {q}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
