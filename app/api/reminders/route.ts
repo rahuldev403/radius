@@ -59,6 +59,7 @@ export async function GET() {
         *,
         booking:bookings (
           id,
+          booking_date,
           start_time,
           end_time,
           service:services (title),
@@ -77,7 +78,10 @@ export async function GET() {
       const booking = reminder.booking;
       if (!booking || !booking.seeker?.email) return false;
 
-      const startTime = new Date(booking.start_time);
+      // Combine date and time to create a full timestamp
+      const startTime = new Date(
+        `${booking.booking_date}T${booking.start_time}`
+      );
       const timeUntil = getTimeUntilString(startTime);
 
       // Determine email type based on reminder type

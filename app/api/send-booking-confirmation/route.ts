@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
       .select(
         `
         id,
+        booking_date,
         start_time,
         end_time,
         service:services (title),
@@ -49,6 +50,14 @@ export async function POST(request: NextRequest) {
         : booking.provider,
     };
 
+    // Combine date and time for display
+    const bookingStartDateTime = new Date(
+      `${booking.booking_date}T${booking.start_time}`
+    );
+    const bookingEndDateTime = new Date(
+      `${booking.booking_date}T${booking.end_time}`
+    );
+
     // Send confirmation email to seeker
     const seekerEmailSuccess = await sendEmail({
       to: normalizedBooking.seeker.email,
@@ -57,8 +66,8 @@ export async function POST(request: NextRequest) {
         userName: normalizedBooking.seeker.full_name,
         providerName: normalizedBooking.provider.full_name,
         serviceName: normalizedBooking.service.title,
-        startTime: new Date(booking.start_time).toLocaleString(),
-        endTime: new Date(booking.end_time).toLocaleString(),
+        startTime: bookingStartDateTime.toLocaleString(),
+        endTime: bookingEndDateTime.toLocaleString(),
       }),
     });
 
@@ -70,8 +79,8 @@ export async function POST(request: NextRequest) {
         userName: normalizedBooking.provider.full_name,
         providerName: normalizedBooking.seeker.full_name,
         serviceName: normalizedBooking.service.title,
-        startTime: new Date(booking.start_time).toLocaleString(),
-        endTime: new Date(booking.end_time).toLocaleString(),
+        startTime: bookingStartDateTime.toLocaleString(),
+        endTime: bookingEndDateTime.toLocaleString(),
       }),
     });
 

@@ -138,19 +138,15 @@ export default function ServiceDetailPage({
       if (!dateToFetch) return;
 
       try {
-        const startOfDay = new Date(dateToFetch);
-        startOfDay.setHours(0, 0, 0, 0);
-
-        const endOfDay = new Date(dateToFetch);
-        endOfDay.setHours(23, 59, 59, 999);
+        // Format the date as YYYY-MM-DD to match the booking_date column
+        const bookingDate = dateToFetch.toISOString().split("T")[0];
 
         const { data, error } = await supabase
           .from("bookings")
           .select("start_time, end_time")
           .eq("provider_id", service.provider.id)
-          .in("status", ["pending", "confirmed"])
-          .gte("start_time", startOfDay.toISOString())
-          .lte("end_time", endOfDay.toISOString());
+          .eq("booking_date", bookingDate)
+          .in("status", ["pending", "confirmed"]);
 
         if (error) {
           console.warn("Could not fetch bookings (may be RLS policy):", error);
@@ -217,18 +213,14 @@ export default function ServiceDetailPage({
           ? selectedDate[0]
           : selectedDate;
         if (dateToFetch) {
-          const startOfDay = new Date(dateToFetch);
-          startOfDay.setHours(0, 0, 0, 0);
-          const endOfDay = new Date(dateToFetch);
-          endOfDay.setHours(23, 59, 59, 999);
+          const bookingDate = dateToFetch.toISOString().split("T")[0];
 
           const { data } = await supabase
             .from("bookings")
             .select("start_time, end_time")
             .eq("provider_id", service.provider.id)
-            .in("status", ["pending", "confirmed"])
-            .gte("start_time", startOfDay.toISOString())
-            .lte("end_time", endOfDay.toISOString());
+            .eq("booking_date", bookingDate)
+            .in("status", ["pending", "confirmed"]);
 
           if (data) setExistingBookings(data);
         }
@@ -237,14 +229,20 @@ export default function ServiceDetailPage({
       }
 
       // 3. Create the booking record
+      // Format date and time separately to match the database schema
+      const bookingDate = selectedTimeSlot.start.toISOString().split("T")[0]; // YYYY-MM-DD
+      const startTime = selectedTimeSlot.start.toTimeString().split(" ")[0]; // HH:MM:SS
+      const endTime = selectedTimeSlot.end.toTimeString().split(" ")[0]; // HH:MM:SS
+
       const { data: bookingData, error: bookingError } = await supabase
         .from("bookings")
         .insert({
           service_id: service.id,
           seeker_id: user.id,
           provider_id: service.provider.id,
-          start_time: selectedTimeSlot.start.toISOString(),
-          end_time: selectedTimeSlot.end.toISOString(),
+          booking_date: bookingDate,
+          start_time: startTime,
+          end_time: endTime,
           status: "pending",
         })
         .select()

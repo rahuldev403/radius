@@ -26,6 +26,7 @@ import { ReviewForm } from "@/components/ReviewForm";
 
 type Booking = {
   id: number;
+  booking_date: string;
   start_time: string;
   end_time: string;
   status: string;
@@ -75,6 +76,7 @@ export default function MyBookingsPage() {
           .select(
             `
             id,
+            booking_date,
             start_time,
             end_time,
             status,
@@ -84,7 +86,7 @@ export default function MyBookingsPage() {
           `
           )
           .or(`seeker_id.eq.${user.id},provider_id.eq.${user.id}`)
-          .order("start_time", { ascending: false });
+          .order("booking_date", { ascending: false });
 
         if (error) throw error;
 
@@ -262,16 +264,15 @@ export default function MyBookingsPage() {
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4" />
                             {format(
-                              new Date(booking.start_time),
+                              new Date(booking.booking_date),
                               "MMM d, yyyy"
                             )}
                           </div>
                           <div className="flex items-center gap-1">
                             <Clock className="w-4 h-4" />
-                            {format(
-                              new Date(booking.start_time),
-                              "h:mm a"
-                            )} - {format(new Date(booking.end_time), "h:mm a")}
+                            {/* Parse time-only strings and format them */}
+                            {booking.start_time.substring(0, 5)} -{" "}
+                            {booking.end_time.substring(0, 5)}
                           </div>
                         </div>
                       </div>

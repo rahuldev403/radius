@@ -13,13 +13,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Query for overlapping bookings
+    // Parse the ISO timestamps and extract date and time components
+    const startDate = new Date(startTime);
+    const endDate = new Date(endTime);
+
+    const bookingDate = startDate.toISOString().split("T")[0]; // YYYY-MM-DD
+    const startTimeOnly = startDate.toTimeString().split(" ")[0]; // HH:MM:SS
+    const endTimeOnly = endDate.toTimeString().split(" ")[0]; // HH:MM:SS
+
+    // Query for overlapping bookings on the same date
     let query = supabase
       .from("bookings")
-      .select("id, start_time, end_time, status")
+      .select("id, start_time, end_time, status, booking_date")
       .eq("provider_id", providerId)
+      .eq("booking_date", bookingDate)
       .in("status", ["pending", "confirmed"])
-      .or(`and(start_time.lt.${endTime},end_time.gt.${startTime})`);
+      .or(`and(start_time.lt.${endTimeOnly},end_time.gt.${startTimeOnly})`);
 
     // Exclude a specific booking if updating an existing one
     if (excludeBookingId) {

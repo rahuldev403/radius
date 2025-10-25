@@ -42,8 +42,18 @@ export function TimeSlotPicker({
 
         // Check if this slot conflicts with any existing booking
         const isAvailable = !existingBookings.some((booking) => {
-          const bookingStart = parseISO(booking.start_time);
-          const bookingEnd = parseISO(booking.end_time);
+          // Parse time-only strings (HH:MM:SS format) and combine with the selected date
+          const bookingStart = new Date(selectedDate);
+          const [startHour, startMin, startSec] = booking.start_time
+            .split(":")
+            .map(Number);
+          bookingStart.setHours(startHour, startMin, startSec || 0, 0);
+
+          const bookingEnd = new Date(selectedDate);
+          const [endHour, endMin, endSec] = booking.end_time
+            .split(":")
+            .map(Number);
+          bookingEnd.setHours(endHour, endMin, endSec || 0, 0);
 
           // Check for overlap
           return (
