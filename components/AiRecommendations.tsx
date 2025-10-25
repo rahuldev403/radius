@@ -1,72 +1,224 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Lightbulb } from 'lucide-react';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { supabase } from "@/lib/supabase";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Lightbulb, Loader2, TrendingUp, Star, Clock } from "lucide-react";
 
-// Mock data for the demo
-// In a real app, this data would come from your AI matching function
-const mockRecommendations = [
-  {
-    id: 1,
-    title: 'Beginner Yoga Class',
-    category: 'Fitness',
-    provider: 'Sarah K.',
-    match: 'Based on your interest in "Wellness"',
-  },
-  {
-    id: 2,
-    title: 'Data Science Tutoring',
-    category: 'Tech',
-    provider: 'David L.',
-    match: 'Based on your skill in "Python"',
-  },
-  {
-    id: 3,
-    title: 'Spanish Conversation',
-    category: 'Language',
-    provider: 'Maria G.',
-    match: 'Based on your goal to "Travel"',
-  },
-  {
-    id: 4,
-    title: 'Local Community Garden',
-    category: 'Community',
-    provider: 'Green Thumbs',
-    match: 'Based on your location',
-  },
-];
+type Service = {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  provider: {
+    full_name: string;
+  };
+  matchReason: string;
+  matchScore: number;
+};
 
 export function AiRecommendations() {
+  const [recommendations, setRecommendations] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  useEffect(() => {
+    fetchRecommendations();
+  }, []);
+
+  const fetchRecommendations = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Fetch user profile for personalization
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("bio, full_name")
+        .eq("id", user.id)
+        .single();
+
+      setUserProfile(profile);
+
+      // Fetch user's booking history to understand preferences
+      const { data: bookings } = await supabase
+        .from("bookings")
+        .select("service:services(category)")
+        .eq("seeker_id", user.id)
+        .limit(10);
+
+      const bookedCategories =
+        bookings
+          ?.map((b: any) =>
+            Array.isArray(b.service)
+              ? b.service[0]?.category
+              : b.service?.category
+          )
+          .filter(Boolean) || [];
+
+      // Fetch all services
+      const { data: services } = await supabase
+        .from("services")
+        .select(
+          `
+          id,
+          title,
+          description,
+          category,
+          provider:profiles!services_provider_id_fkey (full_name)
+        `
+        )
+        .neq("provider_id", user.id) // Don't recommend own services
+        .limit(20);
+
+      if (services) {
+        // AI-like scoring algorithm
+        const scoredServices = services.map((service: any) => {
+          let score = 0;
+          let reason = "";
+
+          // Check if category matches user's booking history
+          if (bookedCategories.includes(service.category)) {
+            score += 40;
+            reason = `You've booked ${service.category} services before`;
+          }
+
+          // Check if bio mentions relevant keywords
+          if (profile?.bio) {
+            const bioLower = profile.bio.toLowerCase();
+            const categoryLower = service.category.toLowerCase();
+            const titleLower = service.title.toLowerCase();
+            const descLower = service.description.toLowerCase();
+
+            if (
+              bioLower.includes(categoryLower) ||
+              bioLower.includes(titleLower.split(" ")[0])
+            ) {
+              score += 30;
+              reason =
+                reason || `Matches your interests in ${service.category}`;
+            }
+          }
+
+          // Popular categories get bonus
+          const popularCategories = [
+            "Fitness",
+            "Tech",
+            "Education",
+            "Wellness",
+          ];
+          if (popularCategories.includes(service.category)) {
+            score += 15;
+            if (!reason) reason = `Popular ${service.category} service`;
+          }
+
+          // Trending (new services)
+          score += Math.random() * 15; // Add some randomness
+
+          if (!reason) reason = `Based on your profile and location`;
+
+          return {
+            ...service,
+            provider: Array.isArray(service.provider)
+              ? service.provider[0]
+              : service.provider,
+            matchReason: reason,
+            matchScore: score,
+          };
+        });
+
+        // Sort by score and take top 6
+        const topRecommendations = scoredServices
+          .sort((a, b) => b.matchScore - a.matchScore)
+          .slice(0, 6);
+
+        setRecommendations(topRecommendations);
+      }
+    } catch (error) {
+      console.error("Error fetching recommendations:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="w-full max-w-6xl p-4 mx-auto my-8">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        </div>
+      </div>
+    );
+  }
+
+  if (recommendations.length === 0) {
+    return null;
+  }
+
   return (
     <div className="w-full max-w-6xl p-4 mx-auto my-8">
-      <div className="flex items-center gap-2 mb-4">
-        <Lightbulb className="w-6 h-6 text-emerald-500" />
-        <h2 className="text-2xl font-semibold tracking-tight">
-          AI-Powered Recommendations for You
-        </h2>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Lightbulb className="w-6 h-6 text-emerald-500" />
+          <h2 className="text-2xl font-semibold tracking-tight">
+            AI-Powered Recommendations
+          </h2>
+        </div>
+        <Badge variant="secondary" className="gap-1">
+          <TrendingUp className="w-3 h-3" />
+          Personalized for you
+        </Badge>
       </div>
+
       <ScrollArea className="w-full whitespace-nowrap">
         <div className="flex w-max gap-4 pb-4">
-          {mockRecommendations.map((service) => (
-            // We use an <a> tag here for demo purposes, 
-            // but you'd use a <Link> to the actual service page.
-            <a href="#" key={service.id} className="no-underline">
-              <Card className="w-[300px] hover:shadow-lg transition-shadow">
+          {recommendations.map((service) => (
+            <Link href={`/services/${service.id}`} key={service.id}>
+              <Card className="w-[320px] hover:shadow-xl transition-all hover:scale-105 cursor-pointer">
                 <CardHeader>
-                  <div className="flex items-center justify-between mb-2">
-                    <CardTitle className="text-lg">{service.title}</CardTitle>
+                  <div className="flex items-start justify-between mb-2">
+                    <CardTitle className="text-lg line-clamp-1">
+                      {service.title}
+                    </CardTitle>
                     <Badge variant="outline">{service.category}</Badge>
                   </div>
-                  <CardDescription>with {service.provider}</CardDescription>
+                  <CardDescription>
+                    by {service.provider.full_name}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-emerald-700">{service.match}</p>
+                  <p className="text-sm text-gray-700 line-clamp-2 mb-3">
+                    {service.description}
+                  </p>
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className="flex items-center gap-1 text-emerald-600 font-medium">
+                      <Star className="w-3 h-3 fill-emerald-600" />
+                      {Math.round(service.matchScore)}% match
+                    </div>
+                    <span className="text-gray-400">•</span>
+                    <span className="text-gray-600">{service.matchReason}</span>
+                  </div>
+                  <Button
+                    className="w-full mt-3 bg-emerald-600 hover:bg-emerald-700"
+                    size="sm"
+                  >
+                    View Details
+                  </Button>
                 </CardContent>
               </Card>
-            </a>
+            </Link>
           ))}
         </div>
         <ScrollBar orientation="horizontal" />
@@ -74,4 +226,3 @@ export function AiRecommendations() {
     </div>
   );
 }
-

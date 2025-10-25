@@ -27,7 +27,9 @@ export default function VerifyErrorPage() {
 
       // Shake animation
       gsap.to(errorIconRef.current, {
-        x: [-10, 10, -10, 10, 0],
+        keyframes: {
+          x: [-10, 10, -10, 10, 0],
+        },
         duration: 0.5,
         delay: 0.8,
         ease: "power2.inOut",

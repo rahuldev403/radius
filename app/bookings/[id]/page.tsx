@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, Video } from "lucide-react";
+import { VideoCall } from "@/components/VideoCall";
+import { toast } from "sonner";
 
 // --- shadcn/ui components ---
 import { Button } from "@/components/ui/button";
@@ -24,6 +26,7 @@ type Message = {
   content: string;
   created_at: string;
   sender_id: string;
+  receiver_id?: string;
 };
 
 type BookingDetails = {
@@ -35,6 +38,8 @@ type BookingDetails = {
 
 type User = {
   id: string;
+  full_name?: string;
+  avatar_url?: string;
 };
 
 export default function BookingChatPage({
@@ -51,6 +56,7 @@ export default function BookingChatPage({
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showVideoCall, setShowVideoCall] = useState(false);
 
   // Helper to scroll to the bottom of the chat
   const scrollToBottom = () => {
@@ -98,17 +104,31 @@ export default function BookingChatPage({
 
         if (bookingError) throw bookingError;
 
+        // Normalize the data - Supabase may return arrays for foreign keys
+        const normalizedBooking = {
+          ...bookingData,
+          provider: Array.isArray(bookingData.provider)
+            ? bookingData.provider[0]
+            : bookingData.provider,
+          seeker: Array.isArray(bookingData.seeker)
+            ? bookingData.seeker[0]
+            : bookingData.seeker,
+          service: Array.isArray(bookingData.service)
+            ? bookingData.service[0]
+            : bookingData.service,
+        };
+
         // Check if user is part of this booking
         if (
-          user.id !== bookingData.provider.id &&
-          user.id !== bookingData.seeker.id
+          user.id !== normalizedBooking.provider.id &&
+          user.id !== normalizedBooking.seeker.id
         ) {
           throw new Error("You are not authorized to view this chat.");
         }
 
-        setBooking(bookingData as BookingDetails);
-        const providerId = bookingData.provider.id;
-        const seekerId = bookingData.seeker.id;
+        setBooking(normalizedBooking as BookingDetails);
+        const providerId = normalizedBooking.provider.id;
+        const seekerId = normalizedBooking.seeker.id;
 
         // 3. Fetch initial messages
         const { data: messagesData, error: messagesError } = await supabase
@@ -246,14 +266,38 @@ export default function BookingChatPage({
   const otherUser =
     currentUser?.id === booking.provider.id ? booking.seeker : booking.provider;
 
+  if (showVideoCall) {
+    return (
+      <VideoCall
+        bookingId={params.id}
+        onClose={() => setShowVideoCall(false)}
+      />
+    );
+  }
+
   return (
     <div className="container flex items-center justify-center max-w-2xl min-h-screen p-4 mx-auto">
       <Card className="w-full">
         <CardHeader className="text-center">
-          <CardTitle>Chat about "{booking.service.title}"</CardTitle>
-          <p className="text-sm text-gray-500">
-            You are chatting with {otherUser.full_name}
-          </p>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex-1">
+              <CardTitle>Chat about "{booking.service.title}"</CardTitle>
+              <p className="text-sm text-gray-500">
+                You are chatting with {otherUser.full_name}
+              </p>
+            </div>
+            <Button
+              onClick={() => {
+                setShowVideoCall(true);
+                toast.success("Starting video call...");
+              }}
+              className="bg-emerald-600 hover:bg-emerald-700"
+              size="sm"
+            >
+              <Video className="w-4 h-4 mr-2" />
+              Start Call
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <ScrollArea
@@ -264,7 +308,9 @@ export default function BookingChatPage({
               {messages.map((msg) => {
                 const isCurrentUser = msg.sender_id === currentUser?.id;
                 const participant = isCurrentUser ? currentUser : otherUser;
-                const name = isCurrentUser ? "You" : participant.full_name;
+                const name = isCurrentUser
+                  ? "You"
+                  : participant?.full_name || "Unknown";
                 // Ensure participant and avatar_url are defined
                 const avatarUrl = (participant as any)?.avatar_url || "";
 

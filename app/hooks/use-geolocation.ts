@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 
 // Define the structure of the coordinates object
 interface Coordinates {
@@ -28,7 +28,7 @@ export function useGeolocation(): GeolocationState {
     // Check if the geolocation API is available in the browser
     if (!navigator.geolocation) {
       setError(new GeolocationPositionError());
-      console.error('Geolocation is not supported by your browser.');
+      console.error("Geolocation is not supported by your browser.");
       return;
     }
 
@@ -45,7 +45,7 @@ export function useGeolocation(): GeolocationState {
         setLoading(false);
       },
       (err) => {
-        setError(err);
+        setError(err as GeolocationPositionError);
         setLoading(false);
       }
     );
@@ -57,12 +57,13 @@ export function useGeolocation(): GeolocationState {
 // Custom error class in case geolocation is not supported
 class GeolocationPositionError extends Error {
   readonly code: number = 0;
-  readonly message: string = 'Geolocation is not supported by this browser.';
+  readonly message: string = "Geolocation is not supported by this browser.";
   readonly PERMISSION_DENIED: number = 1;
   readonly POSITION_UNAVAILABLE: number = 2;
   readonly TIMEOUT: number = 3;
   constructor() {
-    super('Geolocation is not supported by this browser.');
+    super("Geolocation is not supported by this browser.");
+    this.name = "GeolocationPositionError";
     Object.setPrototypeOf(this, GeolocationPositionError.prototype);
   }
 }

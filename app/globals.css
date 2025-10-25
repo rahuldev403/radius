@@ -120,3 +120,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom utility for map container height */
+.map-container-height {
+  height: calc(100vh - 200px);
+}

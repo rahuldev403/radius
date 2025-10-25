@@ -3,6 +3,7 @@
 "use client";
 
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { useEffect, useRef } from "react";
 import "leaflet/dist/leaflet.css";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css"; // Use standard CSS instead of webpack CSS
 import "leaflet-defaulticon-compatibility"; // Re-JS
@@ -54,16 +55,49 @@ interface MapProps {
 }
 
 export function Map({ services, center, zoom = 13 }: MapProps) {
+  const mapRef = useRef<any>(null);
+
+  // Cleanup function to properly destroy the map instance
+  useEffect(() => {
+    return () => {
+      if (mapRef.current) {
+        try {
+          mapRef.current.remove();
+        } catch (e) {
+          // Ignore errors during cleanup
+        }
+      }
+    };
+  }, []);
+
   if (!center || !center[0] || !center[1]) {
-    return <div>Loading map...</div>;
+    return (
+      <div className="flex items-center justify-center w-full h-full">
+        <p className="text-gray-500">Loading map...</p>
+      </div>
+    );
+  }
+
+  // Validate that center coordinates are valid numbers
+  if (isNaN(center[0]) || isNaN(center[1])) {
+    return (
+      <div className="flex items-center justify-center w-full h-full">
+        <p className="text-red-500">Invalid map coordinates</p>
+      </div>
+    );
   }
 
   return (
     <MapContainer
+      key={`map-${center[0]}-${center[1]}`}
       center={center}
       zoom={zoom}
       scrollWheelZoom={true}
       className="w-full h-full rounded-lg"
+      ref={mapRef}
+      whenReady={() => {
+        console.log("Map is ready");
+      }}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -99,8 +133,11 @@ export function Map({ services, center, zoom = 13 }: MapProps) {
 
         return (
           <Marker key={service.id} position={position}>
-            <Popup>
-              <Card className="border-none shadow-none w-64">
+            <Popup closeButton={true} autoClose={false} closeOnClick={false}>
+              <Card
+                className="border-none shadow-none w-64"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <CardHeader className="p-2">
                   <CardTitle className="text-lg">{service.title}</CardTitle>
                   <CardDescription>
@@ -110,7 +147,13 @@ export function Map({ services, center, zoom = 13 }: MapProps) {
                 <CardContent className="p-2">
                   <p className="text-sm line-clamp-3">{service.description}</p>
                   <Link href={`/services/${service.id}`} passHref>
-                    <Button className="w-full mt-2" size="sm">
+                    <Button
+                      className="w-full mt-2"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
                       View Service
                     </Button>
                   </Link>
@@ -123,3 +166,5 @@ export function Map({ services, center, zoom = 13 }: MapProps) {
     </MapContainer>
   );
 }
+
+export default Map;

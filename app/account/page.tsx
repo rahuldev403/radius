@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { User } from "@supabase/supabase-js";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -23,7 +23,7 @@ import {
 import { MapPin, Loader2 } from "lucide-react"; // Icons for location and loading
 // ----------------------------
 
-export default function AccountPage() {
+function AccountPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isOnboarding = searchParams.get("onboarding") === "true";
@@ -412,5 +412,19 @@ export default function AccountPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        </div>
+      }
+    >
+      <AccountPageContent />
+    </Suspense>
   );
 }

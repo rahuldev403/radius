@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { format, subHours } from "date-fns";
 import { TimeSlotPicker } from "@/components/TimeSlotPicker";
+import { ReviewList } from "@/components/ReviewList";
 
 // --- shadcn/ui components (Patched Imports) ---
 import { Button } from "@/components/ui/button";
@@ -465,6 +466,11 @@ export default function ServiceDetailPage({
               )}
             </CardContent>
           </Card>
+
+          {/* Reviews Section */}
+          <div className="mt-6">
+            <ReviewList profileId={service.provider.id} />
+          </div>
         </div>
       </div>
 

@@ -22,6 +22,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ReviewForm } from "@/components/ReviewForm";
 
 type Booking = {
   id: number;
@@ -51,6 +52,7 @@ export default function MyBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"seeker" | "provider">("seeker");
+  const [showReviewFor, setShowReviewFor] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -363,8 +365,35 @@ export default function MyBookingsPage() {
                             Mark Complete
                           </Button>
                         )}
+
+                        {booking.status === "completed" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-300"
+                            onClick={() => setShowReviewFor(booking.id)}
+                          >
+                            Leave Review
+                          </Button>
+                        )}
                       </div>
                     </div>
+
+                    {/* Review Form - Show if this booking is selected for review */}
+                    {showReviewFor === booking.id &&
+                      booking.status === "completed" && (
+                        <div className="mt-4 pt-4 border-t">
+                          <ReviewForm
+                            bookingId={booking.id}
+                            revieweeId={otherPerson.id}
+                            revieweeName={otherPerson.full_name}
+                            onSubmitSuccess={() => {
+                              setShowReviewFor(null);
+                              toast.success("Thank you for your review!");
+                            }}
+                          />
+                        </div>
+                      )}
                   </CardContent>
                 </Card>
               );
