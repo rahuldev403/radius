@@ -29,18 +29,24 @@ export function Navbar() {
       // Set a flag to skip auth check on next load (for faster logout UX)
       if (typeof window !== "undefined") {
         sessionStorage.setItem("just_logged_out", "true");
+
+        // Clear all session/local storage
+        localStorage.clear();
       }
 
       // Sign out from Supabase
       await supabase.auth.signOut();
 
-      // Use window.location.replace for a hard redirect without history
-      // This ensures the page fully reloads and clears all state
-      window.location.replace("/");
+      // Force a complete page reload to root
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      }
     } catch (error) {
       console.error("Error signing out:", error);
       // Still redirect even if there's an error
-      window.location.replace("/");
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      }
     }
   };
 

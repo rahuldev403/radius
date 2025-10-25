@@ -47,6 +47,16 @@ export default function LandingPage() {
 
   // Check if user is already authenticated
   useEffect(() => {
+    // Skip auth check if user just logged out
+    if (typeof window !== "undefined") {
+      const justLoggedOut = sessionStorage.getItem("just_logged_out");
+      if (justLoggedOut) {
+        sessionStorage.removeItem("just_logged_out");
+        setLoading(false);
+        return;
+      }
+    }
+
     checkAuth();
   }, []);
 

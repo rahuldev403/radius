@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, Send, Video } from "lucide-react";
 import { VideoCall } from "@/components/VideoCall";
 import { toast } from "sonner";
+import React from "react";
 
 // --- shadcn/ui components ---
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ export default function BookingChatPage({
 }: {
   params: { id: string };
 }) {
+  const { id } = React.use(params);
   const router = useRouter();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -99,7 +101,7 @@ export default function BookingChatPage({
             service: services (id, title)
           `
           )
-          .eq("id", params.id)
+          .eq("id", id)
           .single();
 
         if (bookingError) throw bookingError;
@@ -163,7 +165,7 @@ export default function BookingChatPage({
     };
 
     setupChat();
-  }, [params.id, supabase, router]);
+  }, [id, supabase, router]);
 
   // --- Real-time Subscription Effect ---
   useEffect(() => {
@@ -175,7 +177,7 @@ export default function BookingChatPage({
 
     // Listen to new messages in the 'messages' table
     const channel = supabase
-      .channel(`chat_room:${params.id}`)
+      .channel(`chat_room:${id}`)
       .on(
         "postgres_changes",
         {
@@ -204,7 +206,7 @@ export default function BookingChatPage({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, params.id, booking]);
+  }, [supabase, id, booking]);
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -269,7 +271,7 @@ export default function BookingChatPage({
   if (showVideoCall) {
     return (
       <VideoCall
-        bookingId={params.id}
+        bookingId={id}
         onClose={() => setShowVideoCall(false)}
       />
     );
@@ -295,7 +297,7 @@ export default function BookingChatPage({
               size="sm"
             >
               <Video className="w-4 h-4 mr-2" />
-              Start Call
+              Video Call
             </Button>
           </div>
         </CardHeader>
