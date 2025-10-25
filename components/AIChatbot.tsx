@@ -58,7 +58,10 @@ const PREDEFINED_ANSWERS: Record<string, string> = {
     "To update your profile:\n1. Click 'Profile' button in the header\n2. Edit your name, bio, or location\n3. Click 'Save Changes'\n\nYour location determines which services you see on the map!",
 };
 
-export function AIChatbot({ variant = "floating", isCollapsed = false }: AIChatbotProps) {
+export function AIChatbot({
+  variant = "floating",
+  isCollapsed = false,
+}: AIChatbotProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -225,7 +228,7 @@ export function AIChatbot({ variant = "floating", isCollapsed = false }: AIChatb
         >
           <MessageCircle className="w-5 h-5" />
           {!isCollapsed && <span className="font-medium">AI Help</span>}
-          
+
           {/* Tooltip for collapsed state */}
           {isCollapsed && (
             <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">

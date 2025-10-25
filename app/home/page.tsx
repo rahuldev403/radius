@@ -31,7 +31,7 @@ type Service = {
   title: string;
   description: string;
   category: string;
-  provider: {
+  provider?: {
     id: string;
     full_name: string;
     location: {
@@ -248,46 +248,75 @@ export default function HomePage() {
       {/* --- Map/List View Container --- */}
       <div className="relative w-full h-[calc(100vh-180px)]">
         {/* --- Control Panel --- */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-md px-4">
-          <div className="p-4 bg-white rounded-lg shadow-2xl border border-gray-200">
-            <div className="flex items-center justify-between mb-2">
-              <Label htmlFor="radius" className="text-base font-semibold">
-                Search Radius
-              </Label>
-              <span className="px-2 py-1 text-sm font-medium text-emerald-700 bg-emerald-100 rounded-md">
-                {radius} km
-              </span>
-            </div>
-            <Slider
-              id="radius"
-              min={1}
-              max={50}
-              step={1}
-              value={[radius]}
-              onValueChange={(value) => setRadius(value[0])}
-            />
-            <p className="mt-2 text-xs text-gray-500">
-              Found {services.length} service{services.length !== 1 ? "s" : ""}{" "}
-              nearby
-            </p>
-            <div className="flex gap-2 mt-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowListView(!showListView)}
-                className="flex-1"
-              >
-                {showListView ? "📍 Map View" : "📋 List View"}
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => router.push("/services/new")}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-              >
-                ➕ Create Service
-              </Button>
-            </div>
-          </div>
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-1000 w-full max-w-md px-4">
+          <Card className="bg-white/95 backdrop-blur-md shadow-2xl border-0 ring-1 ring-gray-200/50">
+            <CardContent className="p-5">
+              {/* Radius Control */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label
+                    htmlFor="radius"
+                    className="text-base font-bold text-gray-900 flex items-center gap-2"
+                  >
+                    <MapPin className="w-4 h-4 text-emerald-600" />
+                    Search Radius
+                  </Label>
+                  <Badge className="bg-linear-to-r from-emerald-600 to-teal-600 text-white px-3 py-1 text-sm font-bold shadow-sm">
+                    {radius} km
+                  </Badge>
+                </div>
+
+                <Slider
+                  id="radius"
+                  min={1}
+                  max={50}
+                  step={1}
+                  value={[radius]}
+                  onValueChange={(value) => setRadius(value[0])}
+                  className="py-2"
+                />
+
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-500">1 km</span>
+                  <span className="font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+                    {services.length} service{services.length !== 1 ? "s" : ""}{" "}
+                    found
+                  </span>
+                  <span className="text-gray-500">50 km</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowListView(!showListView)}
+                  className="flex-1 h-10 border-gray-200 hover:bg-gray-50 hover:border-gray-300 font-medium transition-all"
+                >
+                  {showListView ? (
+                    <>
+                      <MapPin className="w-4 h-4 mr-2" />
+                      Map View
+                    </>
+                  ) : (
+                    <>
+                      <span className="mr-2">📋</span>
+                      List View
+                    </>
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => router.push("/services/new")}
+                  className="flex-1 h-10 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium shadow-md hover:shadow-lg transition-all"
+                >
+                  <span className="mr-2">➕</span>
+                  Create Service
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* --- Map or List Container --- */}
@@ -319,14 +348,14 @@ export default function HomePage() {
           )}
 
           {userCoords && showListView && (
-            <div className="w-full h-full bg-gradient-to-br from-emerald-50 via-white to-teal-50 overflow-hidden">
+            <div className="w-full h-full bg-linear-to-br from-emerald-50 via-white to-teal-50 overflow-hidden">
               <ScrollArea className="h-full">
                 <div className="max-w-5xl mx-auto p-6 pt-32 pb-8 space-y-6">
                   {/* Empty State */}
                   {services.length === 0 && !loading && (
                     <Card className="border-2 border-dashed border-gray-300 bg-card/80 backdrop-blur-sm">
                       <CardContent className="p-12 text-center">
-                        <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center">
+                        <div className="w-20 h-20 mx-auto mb-6 bg-linear-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center">
                           <MapPin className="w-10 h-10 text-emerald-600" />
                         </div>
                         <h3 className="text-2xl font-bold mb-3 text-gray-900">
@@ -338,7 +367,7 @@ export default function HomePage() {
                         </p>
                         <Button
                           onClick={() => router.push("/services/new")}
-                          className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-8 py-6 text-base shadow-lg"
+                          className="bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-8 py-6 text-base shadow-lg"
                         >
                           ➕ Create Your First Service
                         </Button>
@@ -356,7 +385,7 @@ export default function HomePage() {
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-sm">
+                              <div className="w-8 h-8 rounded-full bg-linear-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-sm">
                                 {index + 1}
                               </div>
                               <CardTitle className="text-2xl font-bold text-card-foreground group-hover:text-emerald-600 transition-colors">
@@ -366,13 +395,15 @@ export default function HomePage() {
                             <CardDescription className="flex items-center gap-2 text-base">
                               <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
                               <span className="font-medium text-gray-700">
-                                by {service.provider.full_name}
+                                by{" "}
+                                {service.provider?.full_name ||
+                                  "Unknown Provider"}
                               </span>
                             </CardDescription>
                           </div>
                           <Badge
                             variant="secondary"
-                            className="bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 border-emerald-200 px-4 py-1 text-sm font-semibold"
+                            className="bg-linear-to-r from-emerald-100 to-teal-100 text-emerald-700 border-emerald-200 px-4 py-1 text-sm font-semibold"
                           >
                             {service.category}
                           </Badge>
@@ -387,7 +418,7 @@ export default function HomePage() {
                             onClick={() =>
                               router.push(`/services/${service.id}`)
                             }
-                            className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md hover:shadow-lg transition-all"
+                            className="flex-1 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md hover:shadow-lg transition-all"
                           >
                             View Details →
                           </Button>

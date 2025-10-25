@@ -38,7 +38,7 @@ type Service = {
   title: string;
   description: string;
   category: string;
-  provider: {
+  provider?: {
     id: string;
     full_name: string;
     location: {
@@ -141,7 +141,7 @@ export function Map({ services, center, zoom = 13 }: MapProps) {
                 <CardHeader className="p-2">
                   <CardTitle className="text-lg">{service.title}</CardTitle>
                   <CardDescription>
-                    by {service.provider.full_name}
+                    by {service.provider?.full_name || "Unknown Provider"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-2">
