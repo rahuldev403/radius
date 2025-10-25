@@ -53,6 +53,7 @@ export default function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [dbError, setDbError] = useState(false);
 
   const categories = [
     "All",
@@ -104,8 +105,33 @@ export default function ProjectsPage() {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Supabase error:", error);
-        throw error;
+        // Log detailed error info for debugging
+        if (process.env.NODE_ENV === "development") {
+          console.error("Supabase error details:", {
+            error,
+            message: error?.message,
+            details: error?.details,
+            hint: error?.hint,
+            code: error?.code,
+          });
+        }
+
+        // Mark that there's a database error
+        setDbError(true);
+
+        // Show user-friendly message
+        const errorMessage = error?.message
+          ? `Database error: ${error.message}`
+          : "The community projects feature is not yet set up. Please run the database migrations.";
+
+        toast.error(errorMessage, {
+          description: "Check SETUP_INSTRUCTIONS.md for database setup steps.",
+          duration: 5000,
+        });
+
+        setProjects([]);
+        setLoading(false);
+        return;
       }
 
       // Transform data
@@ -181,6 +207,59 @@ export default function ProjectsPage() {
 
   return (
     <div className="container max-w-7xl mx-auto p-6 space-y-8">
+      {/* Database Setup Warning */}
+      {dbError && (
+        <Card className="border-2 border-amber-200 bg-amber-50">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="shrink-0">
+                <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                  <TrendingUp className="w-6 h-6 text-amber-600" />
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-amber-900 mb-2">
+                  Database Setup Required
+                </h3>
+                <p className="text-amber-800 mb-4">
+                  The community projects feature requires database tables. The{" "}
+                  <strong>profiles</strong> table must be created first,
+                  followed by the community_projects table.
+                </p>
+                <div className="bg-white rounded-lg p-4 border border-amber-200">
+                  <p className="text-sm font-mono text-gray-700 mb-2">
+                    <strong>Quick Setup (Run in order):</strong>
+                  </p>
+                  <ol className="text-sm text-gray-600 space-y-1 list-decimal list-inside">
+                    <li>Open your Supabase project dashboard → SQL Editor</li>
+                    <li>
+                      <strong>FIRST:</strong> Run{" "}
+                      <code className="bg-gray-100 px-2 py-0.5 rounded">
+                        00-profiles-table.sql
+                      </code>
+                    </li>
+                    <li>
+                      <strong>THEN:</strong> Run{" "}
+                      <code className="bg-gray-100 px-2 py-0.5 rounded">
+                        community-projects.sql
+                      </code>
+                    </li>
+                    <li>Refresh this page</li>
+                  </ol>
+                </div>
+                <p className="text-sm text-amber-700 mt-3">
+                  📖 See{" "}
+                  <code className="bg-amber-100 px-2 py-0.5 rounded">
+                    MIGRATION_ORDER.md
+                  </code>{" "}
+                  for complete migration order
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>

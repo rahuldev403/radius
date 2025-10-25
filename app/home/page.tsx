@@ -169,6 +169,12 @@ export default function HomePage() {
       });
 
       if (error) {
+        console.error("Supabase RPC error details:", {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+        });
         throw error;
       }
 
@@ -203,10 +209,24 @@ export default function HomePage() {
         );
       }
     } catch (err: any) {
-      console.error("Error fetching services:", err);
-      setError("Could not load nearby services. " + err.message);
+      console.error("Error fetching services:", {
+        error: err,
+        message: err?.message,
+        details: err?.details,
+        hint: err?.hint,
+        code: err?.code,
+      });
+
+      const errorMessage =
+        err?.message || err?.details || "Unknown error occurred";
+      setError("Could not load nearby services. " + errorMessage);
+
       toast.error("Failed to load services", {
-        description: err.message,
+        description: errorMessage,
+        action: {
+          label: "Retry",
+          onClick: () => fetchServices(),
+        },
       });
     } finally {
       setLoading(false);
@@ -295,35 +315,6 @@ export default function HomePage() {
                     </span>
                     <span className="text-gray-500">50 km</span>
                   </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowListView(!showListView)}
-                    className="flex-1 h-10 border-gray-200 hover:bg-gray-50 hover:border-gray-300 font-medium transition-all"
-                  >
-                    {showListView ? (
-                      <>
-                        <MapPin className="w-4 h-4 mr-2" />
-                        Map View
-                      </>
-                    ) : (
-                      <>
-                        <List className="w-4 h-4 mr-2" />
-                        List View
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => router.push("/services/new")}
-                    className="flex-1 h-10 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium shadow-md hover:shadow-lg transition-all"
-                  >
-                    Create Service
-                  </Button>
                 </div>
               </CardContent>
             </Card>

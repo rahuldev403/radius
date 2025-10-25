@@ -101,7 +101,7 @@ export function CreateServiceModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -226,10 +226,10 @@ export function CreateServiceModal({
             </div>
 
             {/* Right Side - Lottie Animation */}
-            <div className="hidden lg:flex lg:w-[45%] bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500 items-center justify-center p-8">
+            <div className="hidden lg:flex lg:w-[45%] bg-linear-to-br from-purple-500 via-pink-500 to-rose-500 items-center justify-center p-8">
               <div className="text-center text-white space-y-6">
-                {/* Lottie Animation Container */}
-                <div className="w-80 h-80 mx-auto">
+                {/* Lottie Animation */}
+                <div className="w-80 h-80 mx-auto flex items-center justify-center">
                   <DotLottieReact
                     src="https://lottie.host/e0421b96-449c-4e72-964a-f615f15968b4/2PeNfxJ1HD.lottie"
                     loop
@@ -247,7 +247,7 @@ export function CreateServiceModal({
                 {/* Features */}
                 <div className="space-y-3 text-left max-w-sm mx-auto">
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0 mt-0.5">
                       <Check className="w-4 h-4" />
                     </div>
                     <div>
@@ -258,7 +258,7 @@ export function CreateServiceModal({
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0 mt-0.5">
                       <Check className="w-4 h-4" />
                     </div>
                     <div>
@@ -269,7 +269,7 @@ export function CreateServiceModal({
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0 mt-0.5">
                       <Check className="w-4 h-4" />
                     </div>
                     <div>

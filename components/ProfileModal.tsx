@@ -18,8 +18,8 @@ import {
   Loader2,
   Camera,
 } from "lucide-react";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { toast } from "sonner";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -273,7 +273,7 @@ export function ProfileModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -523,10 +523,10 @@ export function ProfileModal({
             </div>
 
             {/* Right Side - Lottie Animation */}
-            <div className="hidden lg:flex lg:w-[45%] bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 items-center justify-center p-8">
+            <div className="hidden lg:flex lg:w-[45%] bg-linear-to-br from-emerald-500 via-teal-500 to-cyan-500 items-center justify-center p-8">
               <div className="text-center text-white space-y-6">
                 {/* Lottie Animation Container */}
-                <div className="w-80 h-80 mx-auto">
+                <div className="w-80 h-80 mx-auto flex items-center justify-center">
                   <DotLottieReact
                     src="https://lottie.host/c925259b-e34f-4ab5-ab68-ea151c9cb447/IRJhod0Nzk.lottie"
                     loop

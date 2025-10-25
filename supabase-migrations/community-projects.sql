@@ -16,7 +16,7 @@ DROP TABLE IF EXISTS community_projects CASCADE;
 -- Stores all community project information
 CREATE TABLE community_projects (
     id BIGSERIAL PRIMARY KEY,
-    creator_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    creator_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
     category VARCHAR(100) NOT NULL,
@@ -57,7 +57,7 @@ CREATE INDEX idx_community_projects_created_at ON community_projects(created_at 
 CREATE TABLE project_participants (
     id BIGSERIAL PRIMARY KEY,
     project_id BIGINT NOT NULL REFERENCES community_projects(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     role VARCHAR(50) NOT NULL DEFAULT 'member',
     joined_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     
@@ -78,7 +78,7 @@ CREATE INDEX idx_project_participants_joined_at ON project_participants(joined_a
 CREATE TABLE project_updates (
     id BIGSERIAL PRIMARY KEY,
     project_id BIGINT NOT NULL REFERENCES community_projects(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     update_type VARCHAR(50) NOT NULL DEFAULT 'general',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,

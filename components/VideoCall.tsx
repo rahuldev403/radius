@@ -141,7 +141,7 @@ export function VideoCall({ bookingId, onClose }: VideoCallProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-gray-900">
+    <div className="fixed inset-0 z-[9999] bg-gray-900">
       {loading && (
         <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-900 via-emerald-900/20 to-gray-900">
           <div className="text-center">

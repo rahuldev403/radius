@@ -19,6 +19,7 @@ import {
   Coins,
   Sparkles,
 } from "lucide-react";
+import { RiRobot2Line } from "react-icons/ri";
 import { AIChatbot } from "@/components/AIChatbot";
 import { CreateServiceModal } from "@/components/CreateServiceModal";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,6 +31,7 @@ export function Sidebar() {
   const { t, language } = useTranslation();
   const { isCollapsed, setIsCollapsed } = useSidebar();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [aiChatOpen, setAiChatOpen] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -252,9 +254,7 @@ export function Sidebar() {
                 isCollapsed ? "justify-center px-2" : "justify-start px-4"
               } h-12 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 relative group rounded-xl font-medium`}
             >
-              <Sparkles
-                className={`${isCollapsed ? "" : "mr-3"} w-5 h-5 animate-pulse`}
-              />
+              <Plus className={`${isCollapsed ? "" : "mr-3"} w-5 h-5`} />
 
               <AnimatePresence>
                 {!isCollapsed && (
@@ -282,8 +282,42 @@ export function Sidebar() {
 
         {/* Bottom Actions */}
         <div className="px-3 py-4 space-y-2 border-t border-gray-200 bg-white/80 backdrop-blur-sm">
-          {/* AI Chatbot */}
-          <AIChatbot variant="navbar" isCollapsed={isCollapsed} />
+          {/* AI Help Button */}
+          <Button
+            variant="ghost"
+            onClick={() => setAiChatOpen(true)}
+            className={`w-full ${
+              isCollapsed ? "justify-center px-2" : "justify-start px-4"
+            } h-11 text-purple-600 hover:text-white hover:bg-linear-to-r hover:from-purple-500 hover:to-indigo-600 relative group rounded-xl transition-all duration-200`}
+          >
+            <RiRobot2Line
+              className={`${
+                isCollapsed ? "" : "mr-3"
+              } w-5 h-5 group-hover:scale-110 transition-transform`}
+            />
+
+            <AnimatePresence>
+              {!isCollapsed && (
+                <motion.span
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="font-medium"
+                >
+                  AI Help
+                </motion.span>
+              )}
+            </AnimatePresence>
+
+            {/* Tooltip for collapsed state */}
+            {isCollapsed && (
+              <div className="absolute left-full ml-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-xl">
+                AI Help
+                <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
+              </div>
+            )}
+          </Button>
 
           {/* Sign Out */}
           <Button
@@ -328,6 +362,9 @@ export function Sidebar() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
       />
+
+      {/* AI Chatbot Modal */}
+      <AIChatbot isOpen={aiChatOpen} onClose={() => setAiChatOpen(false)} />
     </>
   );
 }
