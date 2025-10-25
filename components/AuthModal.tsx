@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X, Mail, Lock, User, Compass } from "lucide-react";
+import { X, Mail, Lock, User, Compass, Chrome } from "lucide-react";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -23,6 +23,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // OTP states
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [otpLoading, setOtpLoading] = useState(false);
 
   const formRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
@@ -112,35 +117,122 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setMessage("");
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    try {
+      // Send OTP to email
+      const response = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, userName: email.split("@")[0] }),
+      });
 
-    setLoading(false);
+      const data = await response.json();
 
-    if (error) {
-      setError(`Sign up failed: ${error.message}`);
-    } else {
-      if (
-        data.user &&
-        data.user.identities &&
-        data.user.identities.length === 0
-      ) {
-        setError("This email is already registered. Please sign in instead.");
-      } else {
-        setMessage(
-          "Sign up successful! Please check your email inbox (and spam folder) for a verification link."
-        );
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send OTP");
       }
+
+      setMessage("Verification code sent! Please check your email.");
+      setShowOtpInput(true);
+    } catch (err: any) {
+      setError(err.message || "Failed to send verification code");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setMessage("");
+    setOtpLoading(true);
+
+    try {
+      // Verify OTP and create account
+      const response = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.expired) {
+          setError("Verification code expired. Please request a new one.");
+        } else {
+          throw new Error(data.error || "Invalid verification code");
+        }
+        return;
+      }
+
+      setMessage("Account created successfully! Redirecting...");
+
+      // Close modal and redirect
+      setTimeout(() => {
+        onClose();
+        window.location.href = "/account?onboarding=true";
+      }, 1000);
+    } catch (err: any) {
+      setError(err.message || "Verification failed");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setError("");
+    setMessage("");
+    setOtpLoading(true);
+
+    try {
+      const response = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, userName: email.split("@")[0] }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to resend OTP");
+      }
+
+      setMessage("New verification code sent!");
+    } catch (err: any) {
+      setError(err.message || "Failed to resend code");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError("");
+    setMessage("");
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // OAuth will redirect, so we don't need to do anything else
+    } catch (err: any) {
+      setError(err.message || "Google sign-in failed");
+      setLoading(false);
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
-    if (isSignUp) {
+    if (showOtpInput) {
+      handleVerifyOtp(e);
+    } else if (isSignUp) {
       handleSignUp(e);
     } else {
       handleSignIn(e);
@@ -151,6 +243,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setIsSignUp(!isSignUp);
     setError("");
     setMessage("");
+    setShowOtpInput(false);
+    setOtp("");
   };
 
   return (
@@ -217,6 +311,36 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               {/* Form */}
               <form onSubmit={handleSubmit} className="p-8">
                 <div ref={formRef} className="space-y-5">
+                  {/* Google Sign In Button - Show only if not in OTP mode */}
+                  {!showOtpInput && (
+                    <motion.div className="form-field">
+                      <Button
+                        type="button"
+                        onClick={handleGoogleSignIn}
+                        disabled={loading}
+                        variant="outline"
+                        className="w-full py-6 text-base font-semibold border-2 hover:bg-gray-50 dark:hover:bg-gray-800"
+                      >
+                        <Chrome className="w-5 h-5 mr-2" />
+                        Continue with Google
+                      </Button>
+                    </motion.div>
+                  )}
+
+                  {/* Divider */}
+                  {!showOtpInput && (
+                    <div className="form-field relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
+                      </div>
+                      <div className="relative flex justify-center text-sm">
+                        <span className="px-2 bg-white dark:bg-gray-900 text-gray-500">
+                          Or continue with email
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Email Field */}
                   <div className="form-field space-y-2">
                     <Label
@@ -233,30 +357,66 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      disabled={showOtpInput}
                       className="dark:bg-gray-800 dark:text-gray-50 border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-emerald-500"
                     />
                   </div>
 
-                  {/* Password Field */}
-                  <div className="form-field space-y-2">
-                    <Label
-                      htmlFor="password"
-                      className="text-gray-700 dark:text-gray-300 flex items-center gap-2"
-                    >
-                      <Lock className="w-4 h-4" />
-                      Password
-                    </Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="••••••••"
-                      required
-                      minLength={6}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="dark:bg-gray-800 dark:text-gray-50 border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
+                  {/* Password Field - Hide during OTP verification */}
+                  {!showOtpInput && (
+                    <div className="form-field space-y-2">
+                      <Label
+                        htmlFor="password"
+                        className="text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                      >
+                        <Lock className="w-4 h-4" />
+                        Password
+                      </Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="••••••••"
+                        required
+                        minLength={6}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="dark:bg-gray-800 dark:text-gray-50 border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                  )}
+
+                  {/* OTP Input - Show only during OTP verification */}
+                  {showOtpInput && (
+                    <div className="form-field space-y-2">
+                      <Label
+                        htmlFor="otp"
+                        className="text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                      >
+                        <Lock className="w-4 h-4" />
+                        Verification Code
+                      </Label>
+                      <Input
+                        id="otp"
+                        type="text"
+                        placeholder="Enter 6-digit code"
+                        required
+                        maxLength={6}
+                        value={otp}
+                        onChange={(e) =>
+                          setOtp(e.target.value.replace(/\D/g, ""))
+                        }
+                        className="dark:bg-gray-800 dark:text-gray-50 border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-emerald-500 text-center text-2xl tracking-widest"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleResendOtp}
+                        disabled={otpLoading}
+                        className="text-sm text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 font-medium underline-offset-4 hover:underline"
+                      >
+                        Resend Code
+                      </button>
+                    </div>
+                  )}
 
                   {/* Messages */}
                   <AnimatePresence mode="wait">
@@ -294,29 +454,33 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   >
                     <Button
                       type="submit"
-                      disabled={loading}
+                      disabled={loading || otpLoading}
                       className="w-full bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-500 dark:hover:bg-emerald-600 py-6 text-base font-semibold shadow-lg shadow-emerald-500/30"
                     >
-                      {loading
+                      {loading || otpLoading
                         ? "Processing..."
+                        : showOtpInput
+                        ? "Verify Code"
                         : isSignUp
-                        ? "Create Account"
+                        ? "Send Verification Code"
                         : "Sign In"}
                     </Button>
                   </motion.div>
 
-                  {/* Toggle Mode */}
-                  <div className="form-field text-center">
-                    <button
-                      type="button"
-                      onClick={toggleMode}
-                      className="text-sm text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 font-medium underline-offset-4 hover:underline"
-                    >
-                      {isSignUp
-                        ? "Already have an account? Sign In"
-                        : "Don't have an account? Sign Up"}
-                    </button>
-                  </div>
+                  {/* Toggle Mode - Hide during OTP verification */}
+                  {!showOtpInput && (
+                    <div className="form-field text-center">
+                      <button
+                        type="button"
+                        onClick={toggleMode}
+                        className="text-sm text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 font-medium underline-offset-4 hover:underline"
+                      >
+                        {isSignUp
+                          ? "Already have an account? Sign In"
+                          : "Don't have an account? Sign Up"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </form>
             </div>
