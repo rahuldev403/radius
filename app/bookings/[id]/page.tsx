@@ -329,7 +329,30 @@ export default function BookingChatPage({
       const unreadIds = unreadMessages.map((msg) => msg.id);
 
       try {
-        // Mark messages as read individually to avoid RLS policy issues
+        // Try bulk update first (more efficient)
+        const { error: bulkError } = await supabase
+          .from("messages")
+          .update({ read: true })
+          .in("id", unreadIds)
+          .eq("receiver_id", currentUser.id);
+
+        if (!bulkError) {
+          // Bulk update succeeded
+          setMessages((currentMessages) =>
+            currentMessages.map((msg) =>
+              unreadIds.includes(msg.id) ? { ...msg, read: true } : msg
+            )
+          );
+          setUnreadCount(0);
+          return;
+        }
+
+        console.warn(
+          "Bulk update failed, trying individual updates:",
+          bulkError
+        );
+
+        // Fall back to individual updates if bulk fails
         const updatePromises = unreadIds.map(async (msgId) => {
           const { error } = await supabase
             .from("messages")
@@ -339,8 +362,13 @@ export default function BookingChatPage({
 
           if (error) {
             console.error(`Error marking message ${msgId} as read:`, error);
+            console.error(
+              "Full error details:",
+              JSON.stringify(error, null, 2)
+            );
             return { success: false, error };
           }
+
           return { success: true };
         });
 
@@ -357,6 +385,8 @@ export default function BookingChatPage({
 
           // Reset unread count
           setUnreadCount(0);
+        } else if (unreadIds.length > 0) {
+          console.warn(`Failed to mark ${unreadIds.length} message(s) as read`);
         }
       } catch (err) {
         console.error("Exception marking messages as read:", err);
