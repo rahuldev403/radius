@@ -6,7 +6,6 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { useGeolocation } from "../hooks/use-geolocation";
 import { AiRecommendations } from "@/components/AiRecommendations";
-import { Navbar } from "@/components/Navbar";
 
 // --- shadcn/ui components ---
 import { Slider } from "@/components/ui/slider";
@@ -240,17 +239,14 @@ export default function HomePage() {
   }
 
   return (
-    <div className="relative w-full min-h-screen bg-gray-50">
-      {/* --- Fixed Navbar --- */}
-      <Navbar />
-
+    <div className="relative w-full min-h-screen bg-gray-50 p-6">
       {/* --- AI Recommendations Section --- */}
-      <div className="pt-4 px-4 max-w-7xl mx-auto">
+      <div className="mb-4">
         <AiRecommendations />
       </div>
 
       {/* --- Map/List View Container --- */}
-      <div className="relative w-full h-[calc(100vh-180px)] mt-4">
+      <div className="relative w-full h-[calc(100vh-180px)]">
         {/* --- Control Panel --- */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-md px-4">
           <div className="p-4 bg-white rounded-lg shadow-2xl border border-gray-200">
@@ -328,7 +324,7 @@ export default function HomePage() {
                 <div className="max-w-5xl mx-auto p-6 pt-32 pb-8 space-y-6">
                   {/* Empty State */}
                   {services.length === 0 && !loading && (
-                    <Card className="border-2 border-dashed border-gray-300 bg-white/80 backdrop-blur-sm">
+                    <Card className="border-2 border-dashed border-gray-300 bg-card/80 backdrop-blur-sm">
                       <CardContent className="p-12 text-center">
                         <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center">
                           <MapPin className="w-10 h-10 text-emerald-600" />
@@ -363,7 +359,7 @@ export default function HomePage() {
                               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-sm">
                                 {index + 1}
                               </div>
-                              <CardTitle className="text-2xl font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">
+                              <CardTitle className="text-2xl font-bold text-card-foreground group-hover:text-emerald-600 transition-colors">
                                 {service.title}
                               </CardTitle>
                             </div>

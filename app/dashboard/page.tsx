@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Navbar } from "@/components/Navbar";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { ProfileModal } from "@/components/ProfileModal";
 import { Button } from "@/components/ui/button";
@@ -267,9 +266,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
-      <Navbar />
-
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-6">
       {/* Onboarding Tour */}
       {showTour && (
         <OnboardingTour

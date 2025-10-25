@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { Loader2, Send, Video } from "lucide-react";
+import { Loader2, Send, Video, ArrowLeft } from "lucide-react";
 import { VideoCall } from "@/components/VideoCall";
 import { toast } from "sonner";
 import React from "react";
@@ -71,14 +71,8 @@ export default function BookingChatPage({
 
   // Helper to scroll to the bottom of the chat
   const scrollToBottom = () => {
-    // Check for scrollAreaRef and its current property
     if (scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector(
-        "[data-radix-scroll-area-viewport]"
-      );
-      if (scrollContainer) {
-        scrollContainer.scrollTop = scrollContainer.scrollHeight;
-      }
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
   };
 
@@ -251,6 +245,52 @@ export default function BookingChatPage({
           );
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "bookings",
+          filter: `id=eq.${id}`,
+        },
+        (payload) => {
+          const updatedBooking = payload.new as any;
+
+          // Check if video call was initiated
+          if (
+            updatedBooking.status === "in_progress" &&
+            booking?.status !== "in_progress"
+          ) {
+            const otherUser =
+              currentUser.id === booking?.provider.id
+                ? booking?.seeker
+                : booking?.provider;
+
+            // Browser notification for video call
+            if (
+              "Notification" in window &&
+              Notification.permission === "granted"
+            ) {
+              new Notification(`Video call from ${otherUser?.full_name}`, {
+                body: "Click to join the video call",
+                icon: otherUser?.avatar_url || "/logo.png",
+                tag: `video-call-${id}`,
+              });
+            }
+
+            // Toast notification
+            toast.info(`${otherUser?.full_name} started a video call`, {
+              description: "Click the video button to join",
+              duration: 10000,
+            });
+
+            // Update booking state
+            setBooking((prev) =>
+              prev ? { ...prev, ...updatedBooking } : prev
+            );
+          }
+        }
+      )
       .subscribe();
 
     // Clean up subscription on unmount
@@ -279,7 +319,7 @@ export default function BookingChatPage({
       const unreadIds = unreadMessages.map((msg) => msg.id);
 
       try {
-        // Mark them as read
+        // Mark them as read - use .in() properly with array
         const { error } = await supabase
           .from("messages")
           .update({ read: true })
@@ -312,7 +352,7 @@ export default function BookingChatPage({
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [messages, currentUser, booking, supabase]);
+  }, [messages, currentUser, booking]);
 
   // Update page title with unread count
   useEffect(() => {
@@ -383,144 +423,205 @@ export default function BookingChatPage({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-emerald-50/30 to-teal-50/30 dark:from-gray-950 dark:via-emerald-950/30 dark:to-teal-950/30 pt-20">
-      <div className="container max-w-4xl mx-auto p-4 py-8">
-        <Card className="w-full shadow-2xl border-0 overflow-hidden">
-          {/* Header */}
-          <CardHeader className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white pb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Avatar className="w-14 h-14 border-2 border-white shadow-lg">
-                  <AvatarImage src={otherUser.avatar_url} />
-                  <AvatarFallback className="bg-white text-emerald-600 font-bold">
-                    {getInitials(otherUser.full_name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <CardTitle className="text-white text-xl mb-1">
-                    {otherUser.full_name}
-                  </CardTitle>
-                  <p className="text-emerald-100 text-sm flex items-center gap-2">
-                    <span className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></span>
-                    Chat about "{booking.service.title}"
-                  </p>
+    <>
+      {/* Global styles for chat scrollbar */}
+      <style jsx global>{`
+        body {
+          overflow: hidden;
+        }
+
+        /* Custom Scrollbar Styles */
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 12px;
+          height: 12px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: linear-gradient(to bottom, #f0fdf4, #ecfdf5);
+          border-radius: 10px;
+          margin: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+          border-radius: 10px;
+          border: 2px solid #f0fdf4;
+          transition: all 0.3s ease;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+          border-color: #d1fae5;
+          box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:active {
+          background: linear-gradient(135deg, #047857 0%, #0f766e 100%);
+        }
+
+        /* Dark mode scrollbar */
+        .dark .custom-scrollbar::-webkit-scrollbar-track {
+          background: linear-gradient(to bottom, #1f2937, #111827);
+        }
+
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+          border-color: #1f2937;
+        }
+
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(135deg, #34d399 0%, #2dd4bf 100%);
+          border-color: #374151;
+        }
+      `}</style>
+
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-emerald-50/30 to-teal-50/30 dark:from-gray-950 dark:via-emerald-950/30 dark:to-teal-950/30 p-4">
+        <div className="flex items-center justify-center w-full h-[calc(100vh-2rem)]">
+          <Card className="w-full h-full max-w-6xl shadow-2xl border-0 overflow-hidden flex flex-col">
+            {/* Header */}
+            <CardHeader className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white pb-6 flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Button
+                    onClick={() => router.back()}
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-white/20 transition-colors"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </Button>
+                  <Avatar className="w-14 h-14 border-2 border-white shadow-lg">
+                    <AvatarImage src={otherUser.avatar_url} />
+                    <AvatarFallback className="bg-white text-emerald-600 font-bold">
+                      {getInitials(otherUser.full_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <CardTitle className="text-white text-xl mb-1">
+                      {otherUser.full_name}
+                    </CardTitle>
+                    <p className="text-emerald-100 text-sm flex items-center gap-2">
+                      <span className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></span>
+                      Chat about "{booking.service.title}"
+                    </p>
+                  </div>
                 </div>
+                <Button
+                  onClick={() => {
+                    setShowVideoCall(true);
+                    toast.success("Starting video call...");
+                  }}
+                  className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 text-white shadow-lg"
+                  size="sm"
+                >
+                  <Video className="w-4 h-4 mr-2" />
+                  Video Call
+                </Button>
               </div>
-              <Button
-                onClick={() => {
-                  setShowVideoCall(true);
-                  toast.success("Starting video call...");
-                }}
-                className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 text-white shadow-lg"
-                size="sm"
+            </CardHeader>
+
+            {/* Chat Messages */}
+            <CardContent className="p-0 flex-1 overflow-hidden">
+              <div
+                className="h-full w-full p-6 bg-gradient-to-b from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-950/50 overflow-y-auto custom-scrollbar"
+                ref={scrollAreaRef}
               >
-                <Video className="w-4 h-4 mr-2" />
-                Video Call
-              </Button>
-            </div>
-          </CardHeader>
+                <div className="flex flex-col gap-4">
+                  {messages.map((msg) => {
+                    const isCurrentUser = msg.sender_id === currentUser?.id;
+                    const participant = isCurrentUser ? currentUser : otherUser;
+                    const name = isCurrentUser
+                      ? "You"
+                      : participant?.full_name || "Unknown";
+                    const avatarUrl = (participant as any)?.avatar_url || "";
 
-          {/* Chat Messages */}
-          <CardContent className="p-0">
-            <ScrollArea
-              className="h-[60vh] w-full p-6 bg-gradient-to-b from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-950/50"
-              ref={scrollAreaRef}
-            >
-              <div className="flex flex-col gap-4">
-                {messages.map((msg) => {
-                  const isCurrentUser = msg.sender_id === currentUser?.id;
-                  const participant = isCurrentUser ? currentUser : otherUser;
-                  const name = isCurrentUser
-                    ? "You"
-                    : participant?.full_name || "Unknown";
-                  const avatarUrl = (participant as any)?.avatar_url || "";
-
-                  return (
-                    <div
-                      key={msg.id}
-                      className={`flex items-start gap-3 ${
-                        isCurrentUser ? "flex-row-reverse" : ""
-                      }`}
-                    >
-                      <Avatar className="w-10 h-10 shadow-md">
-                        <AvatarImage src={avatarUrl} />
-                        <AvatarFallback
-                          className={
-                            isCurrentUser
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-gray-200 text-gray-700"
-                          }
-                        >
-                          {getInitials(name)}
-                        </AvatarFallback>
-                      </Avatar>
+                    return (
                       <div
-                        className={`group relative max-w-[70%] ${
-                          isCurrentUser ? "items-end" : "items-start"
+                        key={msg.id}
+                        className={`flex items-start gap-3 ${
+                          isCurrentUser ? "flex-row-reverse" : ""
                         }`}
                       >
+                        <Avatar className="w-10 h-10 shadow-md">
+                          <AvatarImage src={avatarUrl} />
+                          <AvatarFallback
+                            className={
+                              isCurrentUser
+                                ? "bg-emerald-100 text-emerald-700"
+                                : "bg-gray-200 text-gray-700"
+                            }
+                          >
+                            {getInitials(name)}
+                          </AvatarFallback>
+                        </Avatar>
                         <div
-                          className={`p-4 rounded-2xl shadow-md transition-all hover:shadow-lg ${
-                            isCurrentUser
-                              ? "bg-gradient-to-br from-emerald-600 to-teal-600 text-white rounded-tr-sm"
-                              : "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-tl-sm border border-gray-200 dark:border-gray-700"
+                          className={`group relative max-w-[70%] ${
+                            isCurrentUser ? "items-end" : "items-start"
                           }`}
                         >
-                          <p className="text-sm leading-relaxed">
-                            {msg.content}
-                          </p>
-                        </div>
-                        <div
-                          className={`flex items-center gap-2 text-xs text-gray-500 mt-1 px-2 ${
-                            isCurrentUser ? "flex-row-reverse" : ""
-                          }`}
-                        >
-                          <span>
-                            {new Date(msg.created_at).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                          {isCurrentUser && (
-                            <span className="text-xs">
-                              {msg.read ? (
-                                <span className="text-blue-500 font-medium">
-                                  ✓✓ Seen
-                                </span>
-                              ) : (
-                                <span className="text-gray-400">✓ Sent</span>
-                              )}
+                          <div
+                            className={`p-4 rounded-2xl shadow-md transition-all hover:shadow-lg ${
+                              isCurrentUser
+                                ? "bg-gradient-to-br from-emerald-600 to-teal-600 text-white rounded-tr-sm"
+                                : "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-tl-sm border border-gray-200 dark:border-gray-700"
+                            }`}
+                          >
+                            <p className="text-sm leading-relaxed">
+                              {msg.content}
+                            </p>
+                          </div>
+                          <div
+                            className={`flex items-center gap-2 text-xs text-gray-500 mt-1 px-2 ${
+                              isCurrentUser ? "flex-row-reverse" : ""
+                            }`}
+                          >
+                            <span>
+                              {new Date(msg.created_at).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
                             </span>
-                          )}
+                            {isCurrentUser && (
+                              <span className="text-xs">
+                                {msg.read ? (
+                                  <span className="text-blue-500 font-medium">
+                                    ✓✓ Seen
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400">✓ Sent</span>
+                                )}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </ScrollArea>
-          </CardContent>
+            </CardContent>
 
-          {/* Message Input */}
-          <CardFooter className="p-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
-            <form onSubmit={handleSendMessage} className="flex w-full gap-3">
-              <Input
-                placeholder="Type your message..."
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                className="flex-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-emerald-500 rounded-xl px-4 py-6 text-base shadow-sm"
-              />
-              <Button
-                type="submit"
-                disabled={!newMessage.trim()}
-                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg px-6 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Send className="w-5 h-5" />
-              </Button>
-            </form>
-          </CardFooter>
-        </Card>
+            {/* Message Input */}
+            <CardFooter className="p-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 flex-shrink-0">
+              <form onSubmit={handleSendMessage} className="flex w-full gap-3">
+                <Input
+                  placeholder="Type your message..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  className="flex-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-emerald-500 rounded-xl px-4 py-6 text-base shadow-sm"
+                />
+                <Button
+                  type="submit"
+                  disabled={!newMessage.trim()}
+                  className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg px-6 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Send className="w-5 h-5" />
+                </Button>
+              </form>
+            </CardFooter>
+          </Card>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

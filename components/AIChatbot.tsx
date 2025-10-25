@@ -18,6 +18,7 @@ type Message = {
 
 interface AIChatbotProps {
   variant?: "floating" | "navbar";
+  isCollapsed?: boolean;
 }
 
 const SUGGESTED_QUESTIONS = [
@@ -57,7 +58,7 @@ const PREDEFINED_ANSWERS: Record<string, string> = {
     "To update your profile:\n1. Click 'Profile' button in the header\n2. Edit your name, bio, or location\n3. Click 'Save Changes'\n\nYour location determines which services you see on the map!",
 };
 
-export function AIChatbot({ variant = "floating" }: AIChatbotProps) {
+export function AIChatbot({ variant = "floating", isCollapsed = false }: AIChatbotProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -218,16 +219,24 @@ export function AIChatbot({ variant = "floating" }: AIChatbotProps) {
         <Button
           onClick={() => setIsOpen(true)}
           variant="ghost"
-          size="sm"
-          className="flex items-center gap-2"
+          className={`w-full h-12 flex items-center ${
+            isCollapsed ? "justify-center px-0" : "justify-start"
+          } gap-3 text-white hover:bg-gray-800 px-3 relative group`}
         >
-          <MessageCircle className="w-4 h-4" />
-          <span className="hidden lg:inline">AI Help</span>
+          <MessageCircle className="w-5 h-5" />
+          {!isCollapsed && <span className="font-medium">AI Help</span>}
+          
+          {/* Tooltip for collapsed state */}
+          {isCollapsed && (
+            <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
+              AI Help
+            </div>
+          )}
         </Button>
 
         {isOpen && (
-          <Card className="fixed top-20 right-4 w-96 h-[600px] shadow-2xl z-[9998] flex flex-col">
-            <CardHeader className="bg-emerald-600 text-white">
+          <Card className="fixed top-20 right-4 w-96 h-[600px] shadow-2xl z-9999 flex flex-col">
+            <CardHeader className="bg-linear-to-r from-emerald-600 to-teal-600 text-white rounded-t-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5" />
@@ -238,7 +247,7 @@ export function AIChatbot({ variant = "floating" }: AIChatbotProps) {
                     variant="ghost"
                     size="icon"
                     onClick={handleClearChat}
-                    className="text-white hover:bg-emerald-700 h-8 w-8"
+                    className="text-white hover:bg-white/20 h-8 w-8"
                     title="Clear chat"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -247,18 +256,18 @@ export function AIChatbot({ variant = "floating" }: AIChatbotProps) {
                     variant="ghost"
                     size="icon"
                     onClick={() => setIsOpen(false)}
-                    className="text-white hover:bg-emerald-700 h-8 w-8"
+                    className="text-white hover:bg-white/20 h-8 w-8"
                   >
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
-              <p className="text-xs text-emerald-100 mt-1">
+              <p className="text-xs text-emerald-50 mt-1">
                 Ask me anything about using Radius!
               </p>
             </CardHeader>
 
-            <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
+            <CardContent className="flex-1 flex flex-col p-0 overflow-hidden bg-white">
               <ScrollArea className="flex-1 p-4" ref={scrollRef}>
                 <div className="space-y-4">
                   {messages.map((message) => (
@@ -273,7 +282,7 @@ export function AIChatbot({ variant = "floating" }: AIChatbotProps) {
                       <div
                         className={`max-w-[80%] rounded-lg p-3 ${
                           message.role === "user"
-                            ? "bg-emerald-600 text-white"
+                            ? "bg-linear-to-r from-emerald-600 to-teal-600 text-white"
                             : "bg-gray-100 text-gray-900"
                         }`}
                       >
@@ -295,14 +304,8 @@ export function AIChatbot({ variant = "floating" }: AIChatbotProps) {
                       <div className="bg-gray-100 rounded-lg p-3">
                         <div className="flex gap-1">
                           <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                          <div
-                            className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                            style={{ animationDelay: "0.1s" }}
-                          />
-                          <div
-                            className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                            style={{ animationDelay: "0.2s" }}
-                          />
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.1s]" />
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]" />
                         </div>
                       </div>
                     </div>
@@ -321,7 +324,7 @@ export function AIChatbot({ variant = "floating" }: AIChatbotProps) {
                       <Badge
                         key={index}
                         variant="outline"
-                        className="cursor-pointer hover:bg-emerald-50 hover:border-emerald-300"
+                        className="cursor-pointer hover:bg-emerald-50 hover:border-emerald-300 text-xs"
                         onClick={() => handleSuggestedQuestion(question)}
                       >
                         {question}
@@ -331,13 +334,18 @@ export function AIChatbot({ variant = "floating" }: AIChatbotProps) {
                 </div>
               )}
 
-              {/* Input Area - Always visible */}
-              <div className="border-t p-3 bg-white">
+              {/* Input Area - ALWAYS VISIBLE */}
+              <div className="border-t p-3 bg-white shrink-0">
                 <div className="flex gap-2">
                   <Input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSend()}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSend();
+                      }
+                    }}
                     placeholder="Ask me anything..."
                     className="flex-1"
                     disabled={isTyping}
@@ -345,7 +353,7 @@ export function AIChatbot({ variant = "floating" }: AIChatbotProps) {
                   <Button
                     onClick={handleSend}
                     disabled={!input.trim() || isTyping}
-                    className="bg-emerald-600 hover:bg-emerald-700"
+                    className="bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shrink-0"
                     size="icon"
                   >
                     <Send className="h-4 w-4" />
@@ -364,17 +372,18 @@ export function AIChatbot({ variant = "floating" }: AIChatbotProps) {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-emerald-600 hover:bg-emerald-700 z-50"
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-2xl bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 z-9999 transition-all duration-200 hover:scale-110"
         size="icon"
+        title="Open AI Assistant"
       >
-        <MessageCircle className="h-6 w-6" />
+        <MessageCircle className="h-6 w-6 text-white" />
       </Button>
     );
   }
 
   return (
-    <Card className="fixed bottom-6 right-6 w-96 h-[600px] shadow-2xl z-50 flex flex-col">
-      <CardHeader className="bg-emerald-600 text-white rounded-t-lg">
+    <Card className="fixed bottom-6 right-6 w-96 h-[600px] shadow-2xl z-9999 flex flex-col">
+      <CardHeader className="bg-linear-to-r from-emerald-600 to-teal-600 text-white rounded-t-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5" />
@@ -385,7 +394,7 @@ export function AIChatbot({ variant = "floating" }: AIChatbotProps) {
               variant="ghost"
               size="icon"
               onClick={handleClearChat}
-              className="text-white hover:bg-emerald-700 h-8 w-8"
+              className="text-white hover:bg-white/20 h-8 w-8"
               title="Clear chat"
             >
               <Trash2 className="h-4 w-4" />
@@ -394,18 +403,18 @@ export function AIChatbot({ variant = "floating" }: AIChatbotProps) {
               variant="ghost"
               size="icon"
               onClick={() => setIsOpen(false)}
-              className="text-white hover:bg-emerald-700 h-8 w-8"
+              className="text-white hover:bg-white/20 h-8 w-8"
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
-        <p className="text-xs text-emerald-100 mt-1">
+        <p className="text-xs text-emerald-50 mt-1">
           Ask me anything about using Radius!
         </p>
       </CardHeader>
 
-      <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
+      <CardContent className="flex-1 flex flex-col p-0 overflow-hidden bg-white">
         <ScrollArea className="flex-1 p-4" ref={scrollRef}>
           <div className="space-y-4">
             {messages.map((message) => (
@@ -418,7 +427,7 @@ export function AIChatbot({ variant = "floating" }: AIChatbotProps) {
                 <div
                   className={`max-w-[80%] rounded-lg p-3 ${
                     message.role === "user"
-                      ? "bg-emerald-600 text-white"
+                      ? "bg-linear-to-r from-emerald-600 to-teal-600 text-white"
                       : "bg-gray-100 text-gray-900"
                   }`}
                 >
@@ -440,8 +449,8 @@ export function AIChatbot({ variant = "floating" }: AIChatbotProps) {
                 <div className="bg-gray-100 rounded-lg p-3">
                   <div className="flex gap-1">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.1s]" />
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]" />
                   </div>
                 </div>
               </div>
@@ -460,7 +469,7 @@ export function AIChatbot({ variant = "floating" }: AIChatbotProps) {
                 <Badge
                   key={index}
                   variant="outline"
-                  className="cursor-pointer hover:bg-emerald-50 hover:border-emerald-300"
+                  className="cursor-pointer hover:bg-emerald-50 hover:border-emerald-300 text-xs"
                   onClick={() => handleSuggestedQuestion(question)}
                 >
                   {question}
@@ -470,13 +479,18 @@ export function AIChatbot({ variant = "floating" }: AIChatbotProps) {
           </div>
         )}
 
-        {/* Input Area - Always visible */}
-        <div className="border-t p-3 bg-white">
+        {/* Input Area - ALWAYS VISIBLE */}
+        <div className="border-t p-3 bg-white shrink-0">
           <div className="flex gap-2">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSend()}
+              onKeyPress={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
               placeholder="Ask me anything..."
               className="flex-1"
               disabled={isTyping}
@@ -484,7 +498,7 @@ export function AIChatbot({ variant = "floating" }: AIChatbotProps) {
             <Button
               onClick={handleSend}
               disabled={!input.trim() || isTyping}
-              className="bg-emerald-600 hover:bg-emerald-700"
+              className="bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shrink-0"
               size="icon"
             >
               <Send className="h-4 w-4" />

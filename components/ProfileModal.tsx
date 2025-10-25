@@ -19,6 +19,7 @@ import {
   Camera,
 } from "lucide-react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { toast } from "sonner";
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -54,6 +55,9 @@ export function ProfileModal({
   useEffect(() => {
     if (user && isOpen) {
       loadProfile();
+      // Reset location state when modal opens
+      setHasSetLocation(false);
+      setMessage("");
     }
   }, [user, isOpen]);
 
@@ -162,10 +166,16 @@ export function ProfileModal({
     if (error) {
       setMessage("Error setting location");
       setLoading(false);
+      toast.error("Failed to update location", {
+        description: "Please try again or check your permissions.",
+      });
     } else {
-      setMessage("Location set successfully!");
+      setMessage("Location updated successfully!");
       setHasSetLocation(true);
       setLoading(false);
+      toast.success("Location Updated!", {
+        description: "Your location has been updated successfully.",
+      });
 
       if (isOnboarding && fullName) {
         setTimeout(() => {
