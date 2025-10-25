@@ -321,10 +321,10 @@ export default function ServiceDetailPage({
   };
 
   return (
-    <div className="container max-w-4xl p-4 mx-auto my-12">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* --- Left Column (Service Info) --- */}
-        <div className="md:col-span-2">
+    <div className="container max-w-6xl p-4 mx-auto my-12">
+      <div className="space-y-8">
+        {/* --- Service Header --- */}
+        <div>
           <Badge className="mb-2 bg-emerald-100 text-emerald-700 hover:bg-emerald-200">
             {service.category}
           </Badge>
@@ -344,19 +344,21 @@ export default function ServiceDetailPage({
           <p className="mt-6 text-lg text-gray-700 whitespace-pre-wrap">
             {service.description}
           </p>
+        </div>
 
-          <hr className="my-8" />
+        <hr className="border-gray-200" />
 
-          {/* --- Provider Info Card --- */}
-          <h2 className="text-2xl font-semibold">About the Provider</h2>
-          <Card className="mt-4 border-none shadow-none bg-gray-50">
+        {/* --- Provider Info Card --- */}
+        <div>
+          <h2 className="text-2xl font-semibold mb-4">About the Provider</h2>
+          <Card className="border-2 border-gray-100 shadow-sm hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center gap-4">
-              <Avatar className="w-16 h-16">
+              <Avatar className="w-16 h-16 ring-2 ring-emerald-100">
                 <AvatarImage
                   src={service.provider.avatar_url}
                   alt={service.provider.full_name}
                 />
-                <AvatarFallback>
+                <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-500 text-white text-xl font-bold">
                   {getInitials(service.provider.full_name)}
                 </AvatarFallback>
               </Avatar>
@@ -373,62 +375,84 @@ export default function ServiceDetailPage({
           </Card>
         </div>
 
-        {/* --- Right Column (Booking) --- */}
-        <div className="md:col-span-1">
-          <Card className="sticky top-12">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-2xl">
-                <CalendarIcon className="w-6 h-6" />
-                Book this Service
-              </CardTitle>
-              <CardDescription>Select a date and time slot</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Choose Date
-                </label>
-                <Calendar
-                  onChange={(value) => {
-                    setSelectedDate(value);
-                    setSelectedTimeSlot(null); // Reset time slot when date changes
-                  }}
-                  value={selectedDate}
-                  minDate={new Date()} // Can't book in the past
-                  className="border-none react-calendar-override w-full"
-                />
+        <hr className="border-gray-200" />
+
+        {/* --- Booking Section (Full Width) --- */}
+        <div>
+          <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+            <CalendarIcon className="w-6 h-6 text-emerald-600" />
+            Book this Service
+          </h2>
+
+          <Card className="border-2 border-emerald-100 shadow-lg">
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Left: Calendar */}
+                <div>
+                  <label className="text-sm font-semibold text-gray-900 mb-3 block">
+                    Select Date
+                  </label>
+                  <div className="bg-white rounded-xl p-4 border border-gray-200">
+                    <Calendar
+                      onChange={(value) => {
+                        setSelectedDate(value);
+                        setSelectedTimeSlot(null); // Reset time slot when date changes
+                      }}
+                      value={selectedDate}
+                      minDate={new Date()} // Can't book in the past
+                      className="border-none react-calendar-override w-full"
+                    />
+                  </div>
+                </div>
+
+                {/* Right: Time Slots */}
+                <div>
+                  {selectedDate ? (
+                    <>
+                      <label className="text-sm font-semibold text-gray-900 mb-3 block">
+                        Select Time Slot
+                      </label>
+                      <TimeSlotPicker
+                        selectedDate={
+                          Array.isArray(selectedDate)
+                            ? selectedDate[0] || new Date()
+                            : selectedDate
+                        }
+                        existingBookings={existingBookings}
+                        onSelectSlot={(start, end) =>
+                          setSelectedTimeSlot({ start, end })
+                        }
+                        selectedSlot={selectedTimeSlot}
+                        duration={60}
+                      />
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center h-full bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                      <div className="text-center text-gray-500 p-8">
+                        <CalendarIcon className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                        <p className="font-medium">Select a date first</p>
+                        <p className="text-sm">
+                          Choose a date from the calendar to see available time
+                          slots
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {selectedDate && (
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Choose Time
-                  </label>
-                  <TimeSlotPicker
-                    selectedDate={
-                      Array.isArray(selectedDate)
-                        ? selectedDate[0] || new Date()
-                        : selectedDate
-                    }
-                    existingBookings={existingBookings}
-                    onSelectSlot={(start, end) =>
-                      setSelectedTimeSlot({ start, end })
-                    }
-                    selectedSlot={selectedTimeSlot}
-                    duration={60}
-                  />
-                </div>
-              )}
-
+              {/* Selected Time Display */}
               {selectedTimeSlot && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-                  <div className="flex items-center gap-2 text-sm text-emerald-900">
-                    <Clock className="w-4 h-4" />
+                <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg">
+                      <Clock className="w-5 h-5 text-white" />
+                    </div>
                     <div>
-                      <div className="font-semibold">
-                        {format(selectedTimeSlot.start, "EEEE, MMM d, yyyy")}
+                      <div className="font-semibold text-gray-900">
+                        {format(selectedTimeSlot.start, "EEEE, MMMM d, yyyy")}
                       </div>
-                      <div>
+                      <div className="text-emerald-700 font-medium">
                         {format(selectedTimeSlot.start, "h:mm a")} -{" "}
                         {format(selectedTimeSlot.end, "h:mm a")}
                       </div>
@@ -437,8 +461,9 @@ export default function ServiceDetailPage({
                 </div>
               )}
 
+              {/* Book Button */}
               <Button
-                className="w-full bg-emerald-600 hover:bg-emerald-700"
+                className="w-full mt-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
                 onClick={handleBooking}
                 disabled={
                   bookingState === "loading" ||
@@ -447,31 +472,33 @@ export default function ServiceDetailPage({
                 }
               >
                 {(bookingState === "loading" || checkingConflict) && (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                 )}
                 {bookingState === "success" && (
-                  <CheckCircle className="w-4 h-4 mr-2" />
+                  <CheckCircle className="w-5 h-5 mr-2" />
                 )}
                 {checkingConflict
                   ? "Checking availability..."
                   : bookingState === "success"
-                  ? "Booked!"
+                  ? "Booked Successfully!"
                   : "Request to Book"}
               </Button>
 
               {bookingState === "error" && (
-                <div className="flex items-center p-2 text-sm text-red-700 bg-red-100 rounded-md">
-                  <AlertCircle className="w-4 h-4 mr-2" />
+                <div className="flex items-center p-4 mt-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl">
+                  <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0" />
                   <p>Error: {bookingError || "Could not book."}</p>
                 </div>
               )}
             </CardContent>
           </Card>
+        </div>
 
-          {/* Reviews Section */}
-          <div className="mt-6">
-            <ReviewList profileId={service.provider.id} />
-          </div>
+        <hr className="border-gray-200" />
+
+        {/* Reviews Section */}
+        <div>
+          <ReviewList profileId={service.provider.id} />
         </div>
       </div>
 

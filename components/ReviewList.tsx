@@ -135,7 +135,7 @@ export function ReviewList({ profileId }: ReviewListProps) {
               No reviews yet. Be the first to leave a review!
             </div>
           ) : (
-            <ScrollArea className="h-[400px] pr-4">
+            <div className="max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
               <div className="space-y-4">
                 {reviews.map((review) => (
                   <div
@@ -143,18 +143,18 @@ export function ReviewList({ profileId }: ReviewListProps) {
                     className="border-b last:border-b-0 pb-4 last:pb-0"
                   >
                     <div className="flex items-start gap-3">
-                      <Avatar className="w-10 h-10">
+                      <Avatar className="w-10 h-10 shrink-0">
                         <AvatarImage src={review.reviewer.avatar_url} />
-                        <AvatarFallback>
-                          <User className="w-5 h-5" />
+                        <AvatarFallback className="bg-gradient-to-br from-gray-200 to-gray-300">
+                          <User className="w-5 h-5 text-gray-600" />
                         </AvatarFallback>
                       </Avatar>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-semibold">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1 gap-2">
+                          <span className="font-semibold truncate">
                             {review.reviewer.full_name}
                           </span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-500 shrink-0">
                             {format(new Date(review.created_at), "MMM d, yyyy")}
                           </span>
                         </div>
@@ -170,7 +170,7 @@ export function ReviewList({ profileId }: ReviewListProps) {
                             />
                           ))}
                         </div>
-                        <p className="text-sm text-gray-700">
+                        <p className="text-sm text-gray-700 break-words">
                           {review.comment}
                         </p>
                       </div>
@@ -178,7 +178,7 @@ export function ReviewList({ profileId }: ReviewListProps) {
                   </div>
                 ))}
               </div>
-            </ScrollArea>
+            </div>
           )}
         </CardContent>
       </Card>

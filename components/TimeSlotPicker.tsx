@@ -75,45 +75,67 @@ export function TimeSlotPicker({
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2 text-sm text-gray-600">
-        <Clock className="w-4 h-4" />
-        <span>Available Time Slots ({duration} min sessions)</span>
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 rounded-xl border border-emerald-200 dark:border-emerald-800">
+        <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg">
+          <Clock className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h3 className="font-semibold text-gray-900 dark:text-white">
+            Select Time Slot
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            {duration} minute sessions •{" "}
+            {timeSlots.filter((s) => s.available).length} slots available
+          </p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
+      {/* Time Slots Grid */}
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-80 overflow-y-auto p-2 bg-gray-50 dark:bg-gray-900/50 rounded-xl custom-scrollbar">
         {timeSlots.map((slot, index) => (
           <Button
             key={index}
-            variant={isSelected(slot) ? "default" : "outline"}
+            variant="outline"
             size="sm"
             disabled={!slot.available}
             onClick={() => onSelectSlot(slot.start, slot.end)}
-            className={`text-xs ${
+            className={`relative text-sm font-medium transition-all duration-200 ${
               isSelected(slot)
-                ? "bg-emerald-600 hover:bg-emerald-700"
+                ? "bg-gradient-to-br from-emerald-500 to-teal-500 text-white border-emerald-600 shadow-lg shadow-emerald-500/30 scale-105"
                 : slot.available
-                ? "hover:bg-emerald-50 hover:border-emerald-300"
-                : "opacity-50 cursor-not-allowed"
+                ? "bg-white dark:bg-gray-800 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-teal-50 dark:hover:from-emerald-950/50 dark:hover:to-teal-950/50 hover:border-emerald-400 hover:shadow-md border-gray-200 dark:border-gray-700"
+                : "opacity-40 cursor-not-allowed bg-gray-100 dark:bg-gray-900 border-gray-200 dark:border-gray-800 line-through"
             }`}
           >
+            {isSelected(slot) && (
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full border-2 border-emerald-600 shadow-sm" />
+            )}
             {format(slot.start, "h:mm a")}
           </Button>
         ))}
       </div>
 
-      <div className="flex items-center gap-4 text-xs text-gray-500 pt-2 border-t">
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 bg-emerald-600 rounded" />
-          <span>Selected</span>
+      {/* Legend */}
+      <div className="flex flex-wrap items-center gap-4 text-xs p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-gradient-to-br from-emerald-500 to-teal-500 rounded shadow-sm" />
+          <span className="text-gray-700 dark:text-gray-300 font-medium">
+            Selected
+          </span>
         </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 border border-gray-300 rounded" />
-          <span>Available</span>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded" />
+          <span className="text-gray-700 dark:text-gray-300 font-medium">
+            Available
+          </span>
         </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 bg-gray-200 border border-gray-300 rounded" />
-          <span>Booked</span>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-gray-100 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 rounded opacity-50" />
+          <span className="text-gray-700 dark:text-gray-300 font-medium">
+            Booked
+          </span>
         </div>
       </div>
     </div>

@@ -231,7 +231,7 @@ export function CreateServiceModal({
                 {/* Lottie Animation Container */}
                 <div className="w-80 h-80 mx-auto">
                   <DotLottieReact
-                    src="https://lottie.host/embed/b0f6c3d3-5d42-4f5e-8c0e-1c5a5e5a5e5a/animation.lottie"
+                    src="https://lottie.host/e0421b96-449c-4e72-964a-f615f15968b4/2PeNfxJ1HD.lottie"
                     loop
                     autoplay
                   />

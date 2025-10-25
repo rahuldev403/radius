@@ -180,52 +180,63 @@ export default function BookingChatPage({
 
     // Listen to new messages in the 'messages' table
     const channel = supabase
-      .channel(`chat_room:${id}`)
+      .channel(`chat_room:${id}`, {
+        config: {
+          broadcast: { self: false }, // Don't receive own messages via broadcast
+        },
+      })
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "messages",
-          // Filter for messages between only these two users
-          filter: `receiver_id=in.(${providerId},${seekerId})`,
         },
         (payload) => {
           const newMessage = payload.new as Message;
-          // Check if the new message is part of this specific chat
-          if (
+
+          // Verify the message belongs to this chat (between provider and seeker)
+          const isRelevant =
             (newMessage.sender_id === providerId &&
               newMessage.receiver_id === seekerId) ||
             (newMessage.sender_id === seekerId &&
-              newMessage.receiver_id === providerId)
-          ) {
-            setMessages((currentMessages) => [...currentMessages, newMessage]);
+              newMessage.receiver_id === providerId);
 
-            // Show notification if message is from other user
-            if (newMessage.sender_id !== currentUser.id) {
-              const otherUser =
-                newMessage.sender_id === booking.provider.id
-                  ? booking.provider
-                  : booking.seeker;
+          if (!isRelevant) return;
 
-              // Browser notification
-              if (
-                "Notification" in window &&
-                Notification.permission === "granted"
-              ) {
-                new Notification(`New message from ${otherUser.full_name}`, {
-                  body: newMessage.content,
-                  icon: otherUser.avatar_url || "/logo.png",
-                  tag: `chat-${id}`,
-                });
-              }
+          // Add message to state if not already present
+          setMessages((currentMessages) => {
+            const exists = currentMessages.some(
+              (msg) => msg.id === newMessage.id
+            );
+            if (exists) return currentMessages;
+            return [...currentMessages, newMessage];
+          });
 
-              // Toast notification
-              toast.info(`${otherUser.full_name}: ${newMessage.content}`);
+          // Show notification if message is from other user
+          if (newMessage.sender_id !== currentUser.id) {
+            const otherUser =
+              newMessage.sender_id === booking.provider.id
+                ? booking.provider
+                : booking.seeker;
 
-              // Update unread count
-              setUnreadCount((prev) => prev + 1);
+            // Browser notification
+            if (
+              "Notification" in window &&
+              Notification.permission === "granted"
+            ) {
+              new Notification(`New message from ${otherUser.full_name}`, {
+                body: newMessage.content,
+                icon: otherUser.avatar_url || "/logo.png",
+                tag: `chat-${id}`,
+              });
             }
+
+            // Toast notification
+            toast.info(`${otherUser.full_name}: ${newMessage.content}`);
+
+            // Update unread count
+            setUnreadCount((prev) => prev + 1);
           }
         }
       )
@@ -238,6 +249,16 @@ export default function BookingChatPage({
         },
         (payload) => {
           const updatedMessage = payload.new as Message;
+
+          // Verify the message belongs to this chat
+          const isRelevant =
+            (updatedMessage.sender_id === providerId &&
+              updatedMessage.receiver_id === seekerId) ||
+            (updatedMessage.sender_id === seekerId &&
+              updatedMessage.receiver_id === providerId);
+
+          if (!isRelevant) return;
+
           setMessages((currentMessages) =>
             currentMessages.map((msg) =>
               msg.id === updatedMessage.id ? updatedMessage : msg
@@ -256,48 +277,37 @@ export default function BookingChatPage({
         (payload) => {
           const updatedBooking = payload.new as any;
 
-          // Check if video call was initiated
-          if (
-            updatedBooking.status === "in_progress" &&
-            booking?.status !== "in_progress"
-          ) {
-            const otherUser =
-              currentUser.id === booking?.provider.id
-                ? booking?.seeker
-                : booking?.provider;
+          // Update booking state
+          setBooking((prev) => (prev ? { ...prev, ...updatedBooking } : prev));
 
-            // Browser notification for video call
-            if (
-              "Notification" in window &&
-              Notification.permission === "granted"
-            ) {
-              new Notification(`Video call from ${otherUser?.full_name}`, {
-                body: "Click to join the video call",
-                icon: otherUser?.avatar_url || "/logo.png",
-                tag: `video-call-${id}`,
-              });
-            }
+          // Check if video call or status changed
+          const otherUser =
+            currentUser.id === booking?.provider.id
+              ? booking?.seeker
+              : booking?.provider;
 
-            // Toast notification
-            toast.info(`${otherUser?.full_name} started a video call`, {
-              description: "Click the video button to join",
-              duration: 10000,
-            });
-
-            // Update booking state
-            setBooking((prev) =>
-              prev ? { ...prev, ...updatedBooking } : prev
-            );
-          }
+          // Toast notification for booking updates
+          toast.info(`Booking updated by ${otherUser?.full_name}`, {
+            description: "Check the latest booking details",
+            duration: 5000,
+          });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          console.log("✅ Realtime subscription active for booking:", id);
+        } else if (status === "CHANNEL_ERROR") {
+          console.error("❌ Realtime subscription error for booking:", id);
+          toast.error("Connection issue. Messages may be delayed.");
+        }
+      });
 
-    // Clean up subscription on unmount
+    // Cleanup on unmount
     return () => {
+      console.log("🧹 Cleaning up realtime subscription for booking:", id);
       supabase.removeChannel(channel);
     };
-  }, [supabase, id, booking, currentUser]);
+  }, [booking, currentUser, id, supabase]);
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -319,28 +329,35 @@ export default function BookingChatPage({
       const unreadIds = unreadMessages.map((msg) => msg.id);
 
       try {
-        // Mark them as read - use .in() properly with array
-        const { error } = await supabase
-          .from("messages")
-          .update({ read: true })
-          .in("id", unreadIds)
-          .eq("receiver_id", currentUser.id); // Only update messages for current user
+        // Mark messages as read individually to avoid RLS policy issues
+        const updatePromises = unreadIds.map(async (msgId) => {
+          const { error } = await supabase
+            .from("messages")
+            .update({ read: true })
+            .eq("id", msgId)
+            .eq("receiver_id", currentUser.id);
 
-        if (error) {
-          console.error("Error marking messages as read:", error);
-          // Don't block the UI if marking as read fails
-          return;
+          if (error) {
+            console.error(`Error marking message ${msgId} as read:`, error);
+            return { success: false, error };
+          }
+          return { success: true };
+        });
+
+        const results = await Promise.all(updatePromises);
+        const successCount = results.filter((r) => r.success).length;
+
+        if (successCount > 0) {
+          // Update local state for successfully marked messages
+          setMessages((currentMessages) =>
+            currentMessages.map((msg) =>
+              unreadIds.includes(msg.id) ? { ...msg, read: true } : msg
+            )
+          );
+
+          // Reset unread count
+          setUnreadCount(0);
         }
-
-        // Reset unread count
-        setUnreadCount(0);
-
-        // Update local state
-        setMessages((currentMessages) =>
-          currentMessages.map((msg) =>
-            unreadIds.includes(msg.id) ? { ...msg, read: true } : msg
-          )
-        );
       } catch (err) {
         console.error("Exception marking messages as read:", err);
       }

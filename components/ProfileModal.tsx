@@ -81,20 +81,56 @@ export function ProfileModal({
   const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       setUploading(true);
+      setMessage("");
 
       if (!event.target.files || event.target.files.length === 0) {
+        toast.error("No file selected");
         return;
       }
 
       const file = event.target.files[0];
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("File too large", {
+          description: "Please choose an image under 5MB",
+        });
+        return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        toast.error("Invalid file type", {
+          description: "Please upload an image file",
+        });
+        return;
+      }
+
       const fileExt = file.name.split(".").pop();
-      const fileName = `${user?.id}-${Math.random()}.${fileExt}`;
+      const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
 
+      // Delete old avatar if exists
+      if (avatarUrl) {
+        try {
+          const oldPath = avatarUrl.split("/").pop();
+          if (oldPath) {
+            await supabase.storage
+              .from("avatars")
+              .remove([`avatars/${oldPath}`]);
+          }
+        } catch (err) {
+          console.log("No old avatar to delete or delete failed");
+        }
+      }
+
       // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError, data: uploadData } = await supabase.storage
         .from("avatars")
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, file, {
+          upsert: true,
+          contentType: file.type,
+        });
 
       if (uploadError) {
         throw uploadError;
@@ -104,6 +140,9 @@ export function ProfileModal({
       const {
         data: { publicUrl },
       } = supabase.storage.from("avatars").getPublicUrl(filePath);
+
+      // Add timestamp to force refresh
+      const refreshedUrl = `${publicUrl}?t=${Date.now()}`;
 
       // Update profile with avatar URL
       const { error: updateError } = await supabase
@@ -115,12 +154,21 @@ export function ProfileModal({
         throw updateError;
       }
 
-      setAvatarUrl(publicUrl);
-      setMessage("Avatar updated successfully!");
+      setAvatarUrl(refreshedUrl);
+      toast.success("Avatar uploaded!", {
+        description: "Your profile picture has been updated",
+      });
     } catch (error: any) {
-      alert(error.message);
+      console.error("Avatar upload error:", error);
+      toast.error("Upload failed", {
+        description: error.message || "Please try again",
+      });
     } finally {
       setUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -279,9 +327,15 @@ export function ProfileModal({
                   {/* Avatar Upload */}
                   <div className="flex flex-col items-center space-y-4">
                     <div className="relative group">
-                      <Avatar className="w-24 h-24 border-4 border-emerald-100">
-                        <AvatarImage src={avatarUrl} alt={fullName || "User"} />
-                        <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-500 text-white text-2xl">
+                      <Avatar className="w-32 h-32 border-4 border-emerald-100 shadow-lg ring-2 ring-emerald-500/20">
+                        {avatarUrl ? (
+                          <AvatarImage
+                            src={avatarUrl}
+                            alt={fullName || "User"}
+                            className="object-cover"
+                          />
+                        ) : null}
+                        <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-500 text-white text-3xl font-bold">
                           {fullName
                             ? fullName
                                 .split(" ")
@@ -296,13 +350,14 @@ export function ProfileModal({
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={uploading}
-                        className="absolute bottom-0 right-0 p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg transition-all group-hover:scale-110"
-                        title="Upload avatar"
+                        className="absolute bottom-0 right-0 p-3 bg-gradient-to-br from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-full shadow-lg transition-all group-hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Upload profile picture"
+                        aria-label="Upload profile picture"
                       >
                         {uploading ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
-                          <Camera className="w-4 h-4" />
+                          <Camera className="w-5 h-5" />
                         )}
                       </button>
                     </div>
@@ -312,10 +367,17 @@ export function ProfileModal({
                       accept="image/*"
                       onChange={uploadAvatar}
                       className="hidden"
+                      id="avatar-upload"
+                      aria-label="Avatar image upload"
                     />
-                    <p className="text-xs text-gray-500">
-                      Click camera to upload photo
-                    </p>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-gray-700">
+                        {uploading ? "Uploading..." : "Profile Picture"}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Click camera icon to upload (max 5MB)
+                      </p>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
