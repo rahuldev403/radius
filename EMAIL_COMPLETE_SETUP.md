@@ -3,6 +3,7 @@
 ## 🎯 Quick Fix for Email Verification
 
 ### Problem:
+
 Users are not receiving verification emails when signing up.
 
 ### Solution Options:
@@ -33,6 +34,7 @@ Users are not receiving verification emails when signing up.
 ### Step 3: Check Email Rate Limits
 
 Supabase free tier has email rate limits:
+
 - **4 emails per hour** per email address
 - Check your **spam/junk folder**
 - Wait a few minutes between signup attempts
@@ -67,6 +69,7 @@ Resend is a modern email API that's easy to set up and has a generous free tier.
 ### Step 3: Add to Environment Variables
 
 Add this line to your `.env.local`:
+
 ```bash
 RESEND_API_KEY=re_your_api_key_here
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -84,10 +87,12 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 The following emails will now work:
 
 1. **Booking Confirmation Emails**
+
    - Sent when a booking is created
    - Goes to both seeker and provider
 
 2. **Booking Reminder Emails**
+
    - 24 hours before session
    - 1 hour before session
    - 15 minutes before session
@@ -102,6 +107,7 @@ The following emails will now work:
 ### Step 1: Get SMTP Credentials
 
 Choose an SMTP provider:
+
 - **SendGrid** (12k emails/month free)
 - **Mailgun** (5k emails/month free)
 - **AWS SES** (62k emails/month free)
@@ -140,6 +146,7 @@ console.log("📧 EMAIL SENT (Development Mode):")
 ### Test 2: Booking Confirmation
 
 After creating a booking, the system automatically:
+
 1. Sends confirmation to seeker
 2. Sends notification to provider
 
@@ -153,6 +160,7 @@ To trigger reminder emails, you need to:
 2. **Wait or manually trigger** the cron job
 
 To manually test reminders:
+
 ```bash
 # Visit this URL in your browser or use curl
 curl http://localhost:3000/api/reminders
@@ -163,6 +171,7 @@ curl http://localhost:3000/api/reminders
 ### Test 4: Check Email Logs
 
 In development mode, all emails are logged to the console:
+
 ```
 📧 EMAIL SENT (Development Mode):
 To: user@example.com
@@ -178,6 +187,7 @@ For reminders to work automatically, you need a cron job to check for pending re
 ### Option A: Vercel Cron Jobs (Easiest for Production)
 
 1. Create `vercel.json` in your project root:
+
 ```json
 {
   "crons": [
@@ -194,11 +204,12 @@ This runs every 15 minutes to check for pending reminders.
 ### Option B: GitHub Actions (Free Alternative)
 
 Create `.github/workflows/reminders.yml`:
+
 ```yaml
 name: Send Booking Reminders
 on:
   schedule:
-    - cron: '*/15 * * * *'  # Every 15 minutes
+    - cron: "*/15 * * * *" # Every 15 minutes
   workflow_dispatch:
 
 jobs:
@@ -213,6 +224,7 @@ jobs:
 ### Option C: Local Testing (Manual)
 
 Visit this URL every 15 minutes:
+
 ```
 http://localhost:3000/api/reminders
 ```
@@ -224,12 +236,14 @@ http://localhost:3000/api/reminders
 The system includes professional email templates:
 
 1. **Booking Confirmation** 🎉
+
    - Clean design with gradient header
    - Booking details card
    - Call-to-action button
    - Footer with contact info
 
 2. **Booking Reminder** ⏰
+
    - Urgent orange/yellow theme
    - Alert box with session details
    - Countdown timer text
@@ -247,6 +261,7 @@ The system includes professional email templates:
 ### Issue: Not receiving verification emails
 
 **Check:**
+
 1. ✅ Email confirmations enabled in Supabase
 2. ✅ Redirect URLs configured correctly
 3. ✅ Check spam/junk folder
@@ -256,6 +271,7 @@ The system includes professional email templates:
 ### Issue: Booking emails not sending
 
 **Check:**
+
 1. Console logs show email being "sent" in development
 2. `RESEND_API_KEY` is set in `.env.local` (for production)
 3. Email addresses in database are valid
@@ -264,6 +280,7 @@ The system includes professional email templates:
 ### Issue: Reminders not working
 
 **Check:**
+
 1. Cron job is set up and running
 2. Visit `/api/reminders` manually to test
 3. Check `booking_reminders` table has records
@@ -275,6 +292,7 @@ The system includes professional email templates:
 ## 🎯 Current Status
 
 ### ✅ Already Implemented:
+
 - Email service utility (`lib/email.ts`)
 - Professional email templates
 - Booking confirmation API
@@ -285,10 +303,12 @@ The system includes professional email templates:
 ### 📋 What You Need To Do:
 
 1. **For Immediate Testing (Development):**
+
    - Just check the console logs when emails are sent
    - All emails are logged to terminal
 
 2. **For Production:**
+
    - Sign up for Resend (free tier is enough)
    - Add `RESEND_API_KEY` to `.env.local`
    - Set up Vercel cron job for reminders
@@ -319,6 +339,7 @@ The system includes professional email templates:
 All emails are responsive and look great on mobile and desktop!
 
 ### Features:
+
 - ✨ Modern gradient designs
 - 📱 Mobile responsive
 - 🎨 Professional styling

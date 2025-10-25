@@ -1,6 +1,6 @@
 /**
  * Email Service Utility
- * 
+ *
  * This module provides email sending functionality using Resend API
  * For development: Uses console logging
  * For production: Configure RESEND_API_KEY in .env.local
@@ -14,7 +14,12 @@ interface EmailOptions {
 }
 
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
-  const { to, subject, html, from = "Radius <noreply@yourdomain.com>" } = options;
+  const {
+    to,
+    subject,
+    html,
+    from = "Radius <noreply@yourdomain.com>",
+  } = options;
 
   // Check if we're in development mode
   const isDevelopment = process.env.NODE_ENV === "development";
@@ -102,7 +107,9 @@ export const emailTemplates = {
           
           <p>You can manage your booking and chat with the provider from your dashboard.</p>
           
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/my-bookings" class="button">
+          <a href="${
+            process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+          }/my-bookings" class="button">
             View My Bookings
           </a>
           
@@ -156,7 +163,9 @@ export const emailTemplates = {
           
           <p>Make sure you're ready and have everything you need for the session.</p>
           
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/my-bookings" class="button">
+          <a href="${
+            process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+          }/my-bookings" class="button">
             View Booking Details
           </a>
           
@@ -193,10 +202,14 @@ export const emailTemplates = {
         </div>
         <div class="content">
           <p>Hi <strong>${data.userName}</strong>,</p>
-          <p>Your session "<strong>${data.serviceName}</strong>" is starting now!</p>
+          <p>Your session "<strong>${
+            data.serviceName
+          }</strong>" is starting now!</p>
           
           <p style="text-align: center;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/bookings/${data.bookingId}" class="button">
+            <a href="${
+              process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+            }/bookings/${data.bookingId}" class="button">
               Join Session Now 🎥
             </a>
           </p>

@@ -32,18 +32,21 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error || !booking) {
-      return NextResponse.json(
-        { error: "Booking not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
     // Normalize the data (Supabase may return arrays for foreign keys)
     const normalizedBooking = {
       ...booking,
-      service: Array.isArray(booking.service) ? booking.service[0] : booking.service,
-      seeker: Array.isArray(booking.seeker) ? booking.seeker[0] : booking.seeker,
-      provider: Array.isArray(booking.provider) ? booking.provider[0] : booking.provider,
+      service: Array.isArray(booking.service)
+        ? booking.service[0]
+        : booking.service,
+      seeker: Array.isArray(booking.seeker)
+        ? booking.seeker[0]
+        : booking.seeker,
+      provider: Array.isArray(booking.provider)
+        ? booking.provider[0]
+        : booking.provider,
     };
 
     // Send confirmation email to seeker

@@ -110,7 +110,10 @@ export async function GET() {
         });
         return true;
       } catch (error) {
-        console.error(`Failed to send email for reminder ${reminder.id}:`, error);
+        console.error(
+          `Failed to send email for reminder ${reminder.id}:`,
+          error
+        );
         return false;
       }
     });
