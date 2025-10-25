@@ -98,21 +98,22 @@ export function VideoCall({ bookingId, onClose }: VideoCallProps) {
           "fodeviceselection",
           "hangup",
           "chat",
-          "recording",
-          "livestreaming",
           "shareaudio",
           "settings",
           "raisehand",
           "videoquality",
           "filmstrip",
-          "stats",
-          "shortcuts",
           "tileview",
           "videobackgroundblur",
-          "help",
         ],
         SHOW_JITSI_WATERMARK: false,
         SHOW_BRAND_WATERMARK: false,
+        SHOW_WATERMARK_FOR_GUESTS: false,
+        DEFAULT_LOGO_URL: "",
+        DEFAULT_WELCOME_PAGE_LOGO_URL: "",
+        JITSI_WATERMARK_LINK: "",
+        HIDE_INVITE_MORE_HEADER: true,
+        MOBILE_APP_PROMO: false,
       },
     };
 
@@ -140,28 +141,22 @@ export function VideoCall({ bookingId, onClose }: VideoCallProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black">
+    <div className="fixed inset-0 z-50 bg-gray-900">
       {loading && (
-        <div className="flex items-center justify-center h-full">
+        <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-900 via-emerald-900/20 to-gray-900">
           <div className="text-center">
             <Loader2 className="w-12 h-12 animate-spin text-emerald-500 mx-auto mb-4" />
-            <p className="text-white text-lg">Connecting to video call...</p>
-            <p className="text-gray-400 text-sm mt-2">Room: {roomName}</p>
+            <p className="text-white text-lg font-semibold">
+              Connecting to video call...
+            </p>
+            <p className="text-gray-400 text-sm mt-2">Please wait...</p>
           </div>
         </div>
       )}
 
       <div id="jitsi-container" className="w-full h-full" />
 
-      {onClose && (
-        <Button
-          onClick={onClose}
-          className="absolute top-4 right-4 bg-red-600 hover:bg-red-700"
-          size="icon"
-        >
-          <X className="w-5 h-5" />
-        </Button>
-      )}
+      {/* Hide our close button since Jitsi has its own */}
     </div>
   );
 }
