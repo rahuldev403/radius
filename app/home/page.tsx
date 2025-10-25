@@ -179,12 +179,31 @@ export default function HomePage() {
         throw error;
       }
 
-      console.log("Fetched services:", data);
-      setServices(data || []);
+      console.log("Fetched services (raw):", data);
 
-      if (data && data.length > 0) {
+      // The RPC function returns services with provider data
+      // We need to make sure the location is properly formatted
+      const servicesWithLocation = data?.map((service: any) => {
+        // If provider_location exists, format it properly
+        if (service.provider_location) {
+          return {
+            ...service,
+            provider: {
+              id: service.provider_id,
+              full_name: service.provider_name,
+              location: service.provider_location,
+            },
+          };
+        }
+        return service;
+      }) || [];
+
+      console.log("Fetched services (formatted):", servicesWithLocation);
+      setServices(servicesWithLocation);
+
+      if (servicesWithLocation && servicesWithLocation.length > 0) {
         toast.success(
-          `Found ${data.length} service${data.length === 1 ? "" : "s"} nearby`
+          `Found ${servicesWithLocation.length} service${servicesWithLocation.length === 1 ? "" : "s"} nearby`
         );
       }
     } catch (err: any) {

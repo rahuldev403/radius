@@ -77,7 +77,20 @@ export function Map({ services, center, zoom = 13 }: MapProps) {
 
       {/* Markers for each service */}
       {services.map((service) => {
+        // Safely access location coordinates
+        if (!service.provider?.location?.coordinates) {
+          console.warn(`Service ${service.id} missing location data:`, service);
+          return null;
+        }
+
         const [longitude, latitude] = service.provider.location.coordinates;
+        
+        // Validate coordinates
+        if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+          console.warn(`Invalid coordinates for service ${service.id}:`, latitude, longitude);
+          return null;
+        }
+
         const position: LatLngExpression = [latitude, longitude];
 
         return (
