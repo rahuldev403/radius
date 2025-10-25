@@ -29,8 +29,9 @@ export function Navbar() {
   };
 
   const navItems = [
-    { icon: Home, label: "Home", path: "/home" },
-    { icon: Calendar, label: "My Bookings", path: "/my-bookings" },
+    { icon: Home, label: "Dashboard", path: "/dashboard" },
+    { icon: MapPin, label: "Explore", path: "/home" },
+    { icon: Calendar, label: "Bookings", path: "/my-bookings" },
     { icon: User, label: "Profile", path: "/account" },
   ];
 

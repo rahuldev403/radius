@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { sendEmail, emailTemplates } from "@/lib/email";
 
-// This API route handles scheduling reminders for bookings
-// In production, this would integrate with a service like SendGrid, Twilio, or a job queue
+// This API route handles scheduling and sending reminders for bookings
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET endpoint to fetch pending reminders (for cron job/scheduled task)
+// GET endpoint to fetch pending reminders and send emails (for cron job/scheduled task)
 export async function GET() {
   try {
     const now = new Date().toISOString();
@@ -63,7 +63,7 @@ export async function GET() {
           end_time,
           service:services (title),
           seeker:profiles!bookings_seeker_id_fkey (full_name, email),
-          provider:profiles!bookings_provider_id_fkey (full_name)
+          provider:profiles!bookings_provider_id_fkey (full_name, email)
         )
       `
       )
@@ -72,13 +72,57 @@ export async function GET() {
 
     if (error) throw error;
 
-    // In production, this would send actual emails/SMS
-    // For now, we'll just mark them as sent
+    // Send emails for each reminder
+    const emailPromises = (reminders || []).map(async (reminder: any) => {
+      const booking = reminder.booking;
+      if (!booking || !booking.seeker?.email) return false;
+
+      const startTime = new Date(booking.start_time);
+      const timeUntil = getTimeUntilString(startTime);
+
+      // Determine email type based on reminder type
+      let emailHtml = "";
+      let subject = "";
+
+      if (reminder.reminder_type === "15min") {
+        subject = "⏰ Your session starts in 15 minutes!";
+        emailHtml = emailTemplates.sessionStarting({
+          userName: booking.seeker.full_name,
+          serviceName: booking.service.title,
+          bookingId: booking.id,
+        });
+      } else {
+        subject = `⏰ Reminder: Upcoming session in ${timeUntil}`;
+        emailHtml = emailTemplates.bookingReminder({
+          userName: booking.seeker.full_name,
+          providerName: booking.provider.full_name,
+          serviceName: booking.service.title,
+          startTime: startTime.toLocaleString(),
+          timeUntil,
+        });
+      }
+
+      try {
+        await sendEmail({
+          to: booking.seeker.email,
+          subject,
+          html: emailHtml,
+        });
+        return true;
+      } catch (error) {
+        console.error(`Failed to send email for reminder ${reminder.id}:`, error);
+        return false;
+      }
+    });
+
+    await Promise.all(emailPromises);
+
+    // Mark reminders as sent
     if (reminders && reminders.length > 0) {
       const reminderIds = reminders.map((r) => r.id);
       await supabase
         .from("booking_reminders")
-        .update({ sent: true })
+        .update({ sent: true, sent_at: new Date().toISOString() })
         .in("id", reminderIds);
     }
 
@@ -93,5 +137,22 @@ export async function GET() {
       { error: "Failed to fetch reminders" },
       { status: 500 }
     );
+  }
+}
+
+// Helper function to get human-readable time until string
+function getTimeUntilString(targetTime: Date): string {
+  const now = new Date();
+  const diff = targetTime.getTime() - now.getTime();
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (hours >= 24) {
+    const days = Math.floor(hours / 24);
+    return `${days} day${days > 1 ? "s" : ""}`;
+  } else if (hours > 0) {
+    return `${hours} hour${hours > 1 ? "s" : ""}`;
+  } else {
+    return `${minutes} minute${minutes > 1 ? "s" : ""}`;
   }
 }
