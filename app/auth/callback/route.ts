@@ -28,13 +28,19 @@ export async function GET(request: Request) {
 
     try {
       console.log("Exchanging code for session...");
-      
+
       // Exchange code for session
-      const { data: { session }, error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.exchangeCodeForSession(code);
 
       if (sessionError) {
         console.error("❌ Error exchanging code for session:", sessionError);
-        console.error("Session error details:", JSON.stringify(sessionError, null, 2));
+        console.error(
+          "Session error details:",
+          JSON.stringify(sessionError, null, 2)
+        );
         return NextResponse.redirect(
           new URL(`/?error=session_failed`, requestUrl.origin)
         );
@@ -47,7 +53,7 @@ export async function GET(request: Request) {
       if (session?.user) {
         console.log("✓ Google OAuth successful! User:", session.user.email);
         console.log("→ Redirecting to /home");
-        
+
         // Google OAuth successful - redirect to home page
         // User is already authenticated and email verified by Google
         return NextResponse.redirect(new URL("/home", requestUrl.origin));
@@ -69,4 +75,3 @@ export async function GET(request: Request) {
   // If no code, redirect to home
   return NextResponse.redirect(new URL("/", requestUrl.origin));
 }
-
