@@ -1,30 +1,42 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { useRouter } from 'next/navigation';
-import { User } from '@supabase/supabase-js';
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
+import { User } from "@supabase/supabase-js";
 
 // --- shadcn/ui components ---
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2 } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
 // ----------------------------
 
 export default function CreateServicePage() {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   const router = useRouter();
-  const supabase = createClientComponentClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,21 +46,21 @@ export default function CreateServicePage() {
 
     try {
       // 1. Get the currently logged-in user
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
-        throw new Error('You must be logged in to create a service.');
+        throw new Error("You must be logged in to create a service.");
       }
 
       // 2. Insert the new service into the 'services' table
-      const { error: insertError } = await supabase
-        .from('services')
-        .insert({
-          provider_id: user.id, // Link to the user
-          title: title,
-          description: description,
-          category: category,
-          // We will add the AI embedding later (in Bonus step)
-        });
+      const { error: insertError } = await supabase.from("services").insert({
+        provider_id: user.id, // Link to the user
+        title: title,
+        description: description,
+        category: category,
+        // We will add the AI embedding later (in Bonus step)
+      });
 
       if (insertError) {
         throw insertError;
@@ -57,18 +69,17 @@ export default function CreateServicePage() {
       // 3. Handle success
       setLoading(false);
       setSuccess(true);
-      setTitle('');
-      setDescription('');
-      setCategory('');
-      
+      setTitle("");
+      setDescription("");
+      setCategory("");
+
       // Optional: redirect to their dashboard or the new service page
       // For now, just show a success message
-      // router.push('/dashboard'); 
-
+      // router.push('/dashboard');
     } catch (error: any) {
       setLoading(false);
       setError(error.message);
-      console.error('Error creating service:', error);
+      console.error("Error creating service:", error);
     }
   };
 
@@ -125,12 +136,14 @@ export default function CreateServicePage() {
           </CardContent>
           <CardFooter className="flex flex-col items-start">
             <Button type="submit" disabled={loading} className="w-full">
-              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'List My Service'}
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                "List My Service"
+              )}
             </Button>
-            
-            {error && (
-              <p className="text-red-500 text-sm mt-2">{error}</p>
-            )}
+
+            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
             {success && (
               <p className="text-emerald-500 text-sm mt-2">
                 Success! Your service has been listed.
@@ -142,4 +155,3 @@ export default function CreateServicePage() {
     </div>
   );
 }
-
