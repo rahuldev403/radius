@@ -4,8 +4,9 @@
 
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.webpack.css"; // Re-CSS
+import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css"; // Use standard CSS instead of webpack CSS
 import "leaflet-defaulticon-compatibility"; // Re-JS
+import L from "leaflet";
 import { LatLngExpression } from "leaflet";
 // --- CORRECTED IMPORTS ---
 import {
@@ -18,6 +19,14 @@ import {
 import { Button } from "@/components/ui/button";
 // -------------------------
 import Link from "next/link";
+
+// Fix for Leaflet default icon issue in Next.js
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+});
 
 // Define the shape of our service data
 type Service = {
