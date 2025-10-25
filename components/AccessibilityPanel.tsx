@@ -81,10 +81,10 @@ export function AccessibilityPanel({
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+              className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
             >
               {/* Header */}
-              <div className="relative bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white">
+              <div className="relative bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white shrink-0">
                 <button
                   onClick={onClose}
                   className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-colors"
@@ -109,7 +109,7 @@ export function AccessibilityPanel({
               </div>
 
               {/* Content */}
-              <div className="overflow-y-auto max-h-[calc(90vh-140px)] p-6 space-y-6 custom-scrollbar">
+              <div className="overflow-y-auto flex-1 p-6 space-y-6 custom-scrollbar">
                 {/* Visual Settings */}
                 <Card>
                   <CardHeader>
@@ -462,7 +462,7 @@ export function AccessibilityPanel({
               </div>
 
               {/* Footer */}
-              <div className="border-t p-4 bg-gray-50 flex gap-3">
+              <div className="border-t p-4 bg-gray-50 flex gap-3 shrink-0">
                 <Button
                   onClick={handleReset}
                   variant="outline"

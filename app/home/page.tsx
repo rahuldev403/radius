@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MapPin } from "lucide-react";
+import { Loader2, MapPin, X, List } from "lucide-react";
 import { toast } from "sonner";
 // ----------------------------
 
@@ -54,6 +54,7 @@ export default function HomePage() {
     null
   );
   const [showListView, setShowListView] = useState(false);
+  const [showRadiusPanel, setShowRadiusPanel] = useState(true);
 
   // Dynamically import the Map component only on the client-side
   const Map = useMemo(
@@ -248,76 +249,100 @@ export default function HomePage() {
       {/* --- Map/List View Container --- */}
       <div className="relative w-full h-[calc(100vh-180px)]">
         {/* --- Control Panel --- */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-1000 w-full max-w-md px-4">
-          <Card className="bg-white/95 backdrop-blur-md shadow-2xl border-0 ring-1 ring-gray-200/50">
-            <CardContent className="p-5">
-              {/* Radius Control */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label
-                    htmlFor="radius"
-                    className="text-base font-bold text-gray-900 flex items-center gap-2"
+        {showRadiusPanel && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-1000 w-full max-w-md px-4">
+            <Card className="bg-white/95 backdrop-blur-md shadow-2xl border-0 ring-1 ring-gray-200/50">
+              <CardContent className="p-5">
+                {/* Close Button */}
+                <button
+                  onClick={() => setShowRadiusPanel(false)}
+                  className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                  aria-label="Close panel"
+                >
+                  <X className="w-4 h-4 text-gray-500" />
+                </button>
+
+                {/* Radius Control */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label
+                      htmlFor="radius"
+                      className="text-base font-bold text-gray-900 flex items-center gap-2"
+                    >
+                      <MapPin className="w-4 h-4 text-emerald-600" />
+                      Search Radius
+                    </Label>
+                    <Badge className="bg-linear-to-r from-emerald-600 to-teal-600 text-white px-3 py-1 text-sm font-bold shadow-sm">
+                      {radius} km
+                    </Badge>
+                  </div>
+
+                  <Slider
+                    id="radius"
+                    min={1}
+                    max={50}
+                    step={1}
+                    value={[radius]}
+                    onValueChange={(value) => setRadius(value[0])}
+                    className="py-2"
+                  />
+
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-500">1 km</span>
+                    <span className="font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+                      {services.length} service
+                      {services.length !== 1 ? "s" : ""} found
+                    </span>
+                    <span className="text-gray-500">50 km</span>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowListView(!showListView)}
+                    className="flex-1 h-10 border-gray-200 hover:bg-gray-50 hover:border-gray-300 font-medium transition-all"
                   >
-                    <MapPin className="w-4 h-4 text-emerald-600" />
-                    Search Radius
-                  </Label>
-                  <Badge className="bg-linear-to-r from-emerald-600 to-teal-600 text-white px-3 py-1 text-sm font-bold shadow-sm">
-                    {radius} km
-                  </Badge>
+                    {showListView ? (
+                      <>
+                        <MapPin className="w-4 h-4 mr-2" />
+                        Map View
+                      </>
+                    ) : (
+                      <>
+                        <List className="w-4 h-4 mr-2" />
+                        List View
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => router.push("/services/new")}
+                    className="flex-1 h-10 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium shadow-md hover:shadow-lg transition-all"
+                  >
+                    Create Service
+                  </Button>
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
-                <Slider
-                  id="radius"
-                  min={1}
-                  max={50}
-                  step={1}
-                  value={[radius]}
-                  onValueChange={(value) => setRadius(value[0])}
-                  className="py-2"
-                />
-
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-500">1 km</span>
-                  <span className="font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
-                    {services.length} service{services.length !== 1 ? "s" : ""}{" "}
-                    found
-                  </span>
-                  <span className="text-gray-500">50 km</span>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowListView(!showListView)}
-                  className="flex-1 h-10 border-gray-200 hover:bg-gray-50 hover:border-gray-300 font-medium transition-all"
-                >
-                  {showListView ? (
-                    <>
-                      <MapPin className="w-4 h-4 mr-2" />
-                      Map View
-                    </>
-                  ) : (
-                    <>
-                      <span className="mr-2">📋</span>
-                      List View
-                    </>
-                  )}
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => router.push("/services/new")}
-                  className="flex-1 h-10 bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium shadow-md hover:shadow-lg transition-all"
-                >
-                  <span className="mr-2">➕</span>
-                  Create Service
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Show Radius Panel Button (when hidden) */}
+        {!showRadiusPanel && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-1000">
+            <Button
+              onClick={() => setShowRadiusPanel(true)}
+              size="sm"
+              className="bg-white/95 backdrop-blur-md shadow-lg hover:shadow-xl border border-gray-200 text-gray-700 hover:text-green-300"
+            >
+              <MapPin className="w-4 h-4 mr-2" />
+              Search Settings
+            </Button>
+          </div>
+        )}
 
         {/* --- Map or List Container --- */}
         <div className="w-full h-full">
@@ -369,7 +394,7 @@ export default function HomePage() {
                           onClick={() => router.push("/services/new")}
                           className="bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-8 py-6 text-base shadow-lg"
                         >
-                          ➕ Create Your First Service
+                          Create Your First Service
                         </Button>
                       </CardContent>
                     </Card>

@@ -89,6 +89,7 @@ export function ProfileModal({
       }
 
       const file = event.target.files[0];
+      console.log("Uploading file:", file.name, file.type, file.size);
 
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
@@ -106,40 +107,63 @@ export function ProfileModal({
         return;
       }
 
+      if (!user?.id) {
+        toast.error("User not authenticated", {
+          description: "Please sign in again",
+        });
+        return;
+      }
+
       const fileExt = file.name.split(".").pop();
-      const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`; // Changed: removed 'avatars/' prefix as bucket already defines the path
+
+      console.log("Upload path:", filePath);
 
       // Delete old avatar if exists
       if (avatarUrl) {
         try {
-          const oldPath = avatarUrl.split("/").pop();
-          if (oldPath) {
-            await supabase.storage
-              .from("avatars")
-              .remove([`avatars/${oldPath}`]);
+          // Extract filename from URL
+          const urlParts = avatarUrl.split("/");
+          const oldFileName = urlParts[urlParts.length - 1].split("?")[0];
+          console.log("Deleting old avatar:", oldFileName);
+
+          const { error: deleteError } = await supabase.storage
+            .from("avatars")
+            .remove([oldFileName]);
+
+          if (deleteError) {
+            console.log("Delete error (non-critical):", deleteError);
           }
         } catch (err) {
-          console.log("No old avatar to delete or delete failed");
+          console.log("No old avatar to delete or delete failed:", err);
         }
       }
 
       // Upload to Supabase Storage
+      console.log("Starting upload to bucket 'avatars'...");
       const { error: uploadError, data: uploadData } = await supabase.storage
         .from("avatars")
         .upload(filePath, file, {
+          cacheControl: "3600",
           upsert: true,
-          contentType: file.type,
         });
 
       if (uploadError) {
-        throw uploadError;
+        console.error("Upload error details:", uploadError);
+        throw new Error(
+          uploadError.message || "Failed to upload image to storage"
+        );
       }
+
+      console.log("Upload successful:", uploadData);
 
       // Get public URL
       const {
         data: { publicUrl },
       } = supabase.storage.from("avatars").getPublicUrl(filePath);
+
+      console.log("Public URL:", publicUrl);
 
       // Add timestamp to force refresh
       const refreshedUrl = `${publicUrl}?t=${Date.now()}`;
@@ -148,12 +172,16 @@ export function ProfileModal({
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ avatar_url: publicUrl })
-        .eq("id", user?.id);
+        .eq("id", user.id);
 
       if (updateError) {
-        throw updateError;
+        console.error("Profile update error:", updateError);
+        throw new Error(
+          updateError.message || "Failed to update profile with new avatar"
+        );
       }
 
+      console.log("Profile updated successfully");
       setAvatarUrl(refreshedUrl);
       toast.success("Avatar uploaded!", {
         description: "Your profile picture has been updated",
@@ -161,7 +189,8 @@ export function ProfileModal({
     } catch (error: any) {
       console.error("Avatar upload error:", error);
       toast.error("Upload failed", {
-        description: error.message || "Please try again",
+        description:
+          error.message || "Please ensure storage bucket is set up correctly",
       });
     } finally {
       setUploading(false);

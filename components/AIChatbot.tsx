@@ -216,17 +216,22 @@ export function AIChatbot({
         <Button
           onClick={() => setIsOpen(true)}
           variant="ghost"
-          className={`w-full h-12 flex items-center ${
-            isCollapsed ? "justify-center px-0" : "justify-start"
-          } gap-3 text-white hover:bg-gray-800 px-3 relative group`}
+          className={`w-full ${
+            isCollapsed ? "justify-center px-2" : "justify-start px-4"
+          } h-11 text-purple-600 hover:text-white hover:bg-gradient-to-r hover:from-purple-500 hover:to-indigo-600 relative group rounded-xl transition-all duration-200`}
         >
-          <MessageCircle className="w-5 h-5" />
+          <MessageCircle
+            className={`${
+              isCollapsed ? "" : "mr-3"
+            } w-5 h-5 group-hover:scale-110 transition-transform`}
+          />
           {!isCollapsed && <span className="font-medium">AI Help</span>}
 
           {/* Tooltip for collapsed state */}
           {isCollapsed && (
-            <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
+            <div className="absolute left-full ml-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-xl">
               AI Help
+              <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
             </div>
           )}
         </Button>

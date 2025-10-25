@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { useTranslation } from "@/lib/use-translation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
@@ -24,6 +25,7 @@ import { AIChatbot } from "@/components/AIChatbot";
 export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
+  const { t, language } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -52,19 +54,23 @@ export function Navbar() {
     }
   };
 
+  // Define navItems inside the component so it re-computes when language changes
   const navItems = [
-    { icon: Home, label: "Dashboard", path: "/dashboard" },
-    { icon: MapPin, label: "Explore", path: "/home" },
-    { icon: Calendar, label: "Bookings", path: "/my-bookings" },
-    { icon: Users, label: "Projects", path: "/projects" },
-    { icon: Coins, label: "Credits", path: "/credits" },
-    { icon: User, label: "Profile", path: "/account" },
+    { icon: Home, label: t("dashboard"), path: "/dashboard" },
+    { icon: MapPin, label: t("explore"), path: "/home" },
+    { icon: Calendar, label: t("bookings"), path: "/my-bookings" },
+    { icon: Users, label: t("projects"), path: "/projects" },
+    { icon: Coins, label: t("credits"), path: "/credits" },
+    { icon: User, label: t("profile"), path: "/account" },
   ];
 
   return (
     <>
       {/* Desktop Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-[9999] bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+      <nav
+        className="fixed top-0 left-0 right-0 z-[9999] bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm"
+        key={language}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -98,19 +104,21 @@ export function Navbar() {
                   className={`flex items-center gap-2 transition-all duration-200 group ${
                     pathname === item.path
                       ? "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md"
-                      : "text-gray-600 hover:text-emerald-500 hover:bg-emerald-50/80 dark:text-gray-300 dark:hover:text-emerald-400 dark:hover:bg-emerald-950/30"
+                      : "text-gray-600 hover:bg-emerald-50/80 dark:text-gray-300 dark:hover:bg-emerald-950/30"
                   }`}
                 >
                   <item.icon
                     className={`w-4 h-4 transition-all duration-200 ${
                       pathname === item.path
                         ? "text-white"
-                        : "text-gray-600 group-hover:text-emerald-500 group-hover:scale-110 dark:text-gray-300 dark:group-hover:text-emerald-400"
+                        : "text-gray-600 dark:text-gray-300 group-hover:text-white group-hover:scale-110"
                     }`}
                   />
                   <span
                     className={`transition-all duration-200 ${
-                      pathname !== item.path && "group-hover:font-semibold"
+                      pathname === item.path
+                        ? "font-bold text-white"
+                        : "group-hover:font-bold group-hover:text-white"
                     }`}
                   >
                     {item.label}
@@ -125,7 +133,7 @@ export function Navbar() {
                 className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 group"
               >
                 <Plus className="w-4 h-4 mr-1 group-hover:rotate-90 transition-transform duration-200" />
-                Create Service
+                {t("createService")}
               </Button>
 
               {/* AI Chatbot in Navbar */}
@@ -139,7 +147,7 @@ export function Navbar() {
                 className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/30 transition-all duration-200 group"
               >
                 <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
-                Sign Out
+                {t("logout")}
               </Button>
             </div>
 
@@ -201,7 +209,7 @@ export function Navbar() {
                 className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md hover:shadow-lg transition-all duration-200 group"
               >
                 <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform duration-200" />
-                Create Service
+                {t("createService")}
               </Button>
               <Button
                 variant="ghost"
@@ -210,7 +218,7 @@ export function Navbar() {
                 className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/30 transition-all duration-200 group"
               >
                 <LogOut className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
-                Sign Out
+                {t("logout")}
               </Button>
             </div>
           </div>

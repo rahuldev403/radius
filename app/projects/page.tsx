@@ -103,7 +103,10 @@ export default function ProjectsPage() {
         )
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
 
       // Transform data
       const transformedProjects = (data || []).map((project) => ({
@@ -117,9 +120,14 @@ export default function ProjectsPage() {
       })) as Project[];
 
       setProjects(transformedProjects);
-    } catch (error) {
-      console.error("Error fetching projects:", error);
-      toast.error("Failed to load projects");
+    } catch (error: any) {
+      console.error("Error fetching projects:", {
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+        code: error?.code,
+      });
+      toast.error(error?.message || "Failed to load projects");
     } finally {
       setLoading(false);
     }
