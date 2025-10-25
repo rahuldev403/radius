@@ -15,6 +15,27 @@ CREATE INDEX IF NOT EXISTS email_otps_expires_at_idx ON email_otps(expires_at);
 -- Enable RLS
 ALTER TABLE email_otps ENABLE ROW LEVEL SECURITY;
 
+-- Policy: Allow anyone to insert OTPs (for signup)
+CREATE POLICY "Anyone can insert OTPs"
+  ON email_otps
+  FOR INSERT
+  TO anon, authenticated
+  WITH CHECK (true);
+
+-- Policy: Allow anyone to select their own OTP
+CREATE POLICY "Anyone can select OTPs"
+  ON email_otps
+  FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
+-- Policy: Allow anyone to delete OTPs (for verification/cleanup)
+CREATE POLICY "Anyone can delete OTPs"
+  ON email_otps
+  FOR DELETE
+  TO anon, authenticated
+  USING (true);
+
 -- Policy: Service role can do everything (for API routes)
 CREATE POLICY "Service role can manage OTPs"
   ON email_otps

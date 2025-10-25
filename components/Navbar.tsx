@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
 import {
   MapPin,
   Calendar,
@@ -47,13 +48,16 @@ export function Navbar() {
               onClick={() => router.push("/home")}
             >
               <div className="relative">
-                <MapPin className="w-7 h-7 text-emerald-600" />
+                <Image
+                  src="/logo.png"
+                  alt="Radius Logo"
+                  width={40}
+                  height={40}
+                  className="rounded-lg object-cover"
+                />
                 <div className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                Radius
-              </span>
-              <Badge variant="secondary" className="ml-2 text-xs">
+              <Badge variant="secondary" className="text-xs">
                 Beta
               </Badge>
             </div>

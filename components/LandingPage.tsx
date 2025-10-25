@@ -6,8 +6,8 @@ import { supabase } from "@/lib/supabase";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Image from "next/image";
 import {
-  Compass,
   MapPin,
   Users,
   Sparkles,
@@ -198,8 +198,14 @@ export default function LandingPage() {
             transition={{ type: "spring", damping: 15, stiffness: 100 }}
             className="flex justify-center mb-8"
           >
-            <div className="p-4 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-3xl shadow-2xl shadow-emerald-500/50">
-              <Compass className="w-16 h-16 text-white" />
+            <div className="p-4 bg-white dark:bg-gray-800 rounded-3xl shadow-2xl">
+              <Image
+                src="/logo.png"
+                alt="Radius Logo"
+                width={80}
+                height={80}
+                className="rounded-2xl object-cover"
+              />
             </div>
           </motion.div>
 
@@ -350,7 +356,13 @@ export default function LandingPage() {
       <footer className="relative py-12 px-4 bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto text-center">
           <div className="flex justify-center mb-4">
-            <Compass className="w-10 h-10 text-emerald-400" />
+            <Image
+              src="/logo.png"
+              alt="Radius Logo"
+              width={48}
+              height={48}
+              className="rounded-lg object-cover"
+            />
           </div>
           <p className="text-gray-400">
             © 2025 Radius. Building stronger communities, one skill at a time.

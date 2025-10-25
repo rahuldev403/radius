@@ -8,7 +8,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X, Mail, Lock, User, Compass, Chrome } from "lucide-react";
+import Image from "next/image";
+import { X, Mail, Lock, User, Chrome } from "lucide-react";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -284,8 +285,14 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               {/* Header with animated logo */}
               <div className="pt-8 pb-6 px-8 text-center bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950 dark:to-teal-950">
                 <div ref={logoRef} className="flex justify-center mb-4">
-                  <div className="p-3 bg-emerald-600 dark:bg-emerald-500 rounded-full">
-                    <Compass className="w-8 h-8 text-white" />
+                  <div className="p-3 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
+                    <Image
+                      src="/logo.png"
+                      alt="Radius Logo"
+                      width={64}
+                      height={64}
+                      className="rounded-lg object-cover"
+                    />
                   </div>
                 </div>
                 <motion.h2

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Calendar from "react-calendar";
@@ -51,9 +51,10 @@ type CalendarValue = ValuePiece | [ValuePiece, ValuePiece];
 export default function ServiceDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
+  const { id } = use(params); // Unwrap the params Promise
 
   const [service, setService] = useState<ServiceDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -95,7 +96,7 @@ export default function ServiceDetailPage({
             )
           `
           )
-          .eq("id", params.id)
+          .eq("id", id)
           .single(); // We expect only one service
 
         if (error) throw error;
@@ -118,10 +119,10 @@ export default function ServiceDetailPage({
       }
     };
 
-    if (params.id) {
+    if (id) {
       fetchService();
     }
-  }, [params.id]);
+  }, [id]);
 
   // Fetch existing bookings for the selected date
   useEffect(() => {
