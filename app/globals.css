@@ -130,3 +130,228 @@
   background: linear-gradient(135deg, #34d399 0%, #2dd4bf 100%);
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
 }
+
+/* ============================================= */
+/* ACCESSIBILITY FEATURES */
+/* ============================================= */
+
+/* High Contrast Mode */
+.high-contrast {
+  --color-background: #000000;
+  --color-foreground: #ffffff;
+  --color-primary: #ffff00;
+  --color-secondary: #00ffff;
+  --color-border: #ffffff;
+}
+
+.high-contrast * {
+  border-color: #ffffff !important;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+}
+
+.high-contrast a,
+.high-contrast button {
+  outline: 2px solid #ffff00 !important;
+  outline-offset: 2px;
+}
+
+.high-contrast input,
+.high-contrast textarea,
+.high-contrast select {
+  border: 2px solid #ffffff !important;
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Reduce Motion */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Dyslexia-Friendly Font */
+@font-face {
+  font-family: "OpenDyslexic";
+  src: local("OpenDyslexic"),
+    url("https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/OpenDyslexic-Regular.woff")
+      format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.dyslexia-font * {
+  font-family: "OpenDyslexic", "Comic Sans MS", Arial, sans-serif !important;
+  letter-spacing: 0.05em;
+  word-spacing: 0.15em;
+}
+
+/* Line Spacing Options */
+.line-spacing-normal * {
+  line-height: 1.5;
+}
+
+.line-spacing-relaxed * {
+  line-height: 1.75;
+}
+
+.line-spacing-loose * {
+  line-height: 2;
+}
+
+/* Focus Indicators */
+.show-focus-indicators *:focus,
+.show-focus-indicators *:focus-visible {
+  outline: 3px solid #7c3aed !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2) !important;
+}
+
+.show-focus-indicators button:focus,
+.show-focus-indicators a:focus,
+.show-focus-indicators input:focus,
+.show-focus-indicators textarea:focus,
+.show-focus-indicators select:focus {
+  outline: 3px solid #7c3aed !important;
+  outline-offset: 2px !important;
+}
+
+/* Screen Reader Only Content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only-focusable:focus,
+.sr-only-focusable:active {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* Skip to Content Link */
+.skip-to-content {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #7c3aed;
+  color: white;
+  padding: 8px 16px;
+  text-decoration: none;
+  border-radius: 0 0 4px 0;
+  z-index: 100;
+  font-weight: 600;
+}
+
+.skip-to-content:focus {
+  top: 0;
+}
+
+/* Keyboard Navigation Helper */
+.keyboard-nav-active {
+  outline: 3px dashed #7c3aed !important;
+  outline-offset: 5px;
+}
+
+/* Print Styles for Accessibility */
+@media print {
+  .high-contrast {
+    background: white !important;
+    color: black !important;
+  }
+
+  .reduce-motion * {
+    display: block !important;
+  }
+}
+
+/* Responsive Text Sizing */
+@media screen and (max-width: 768px) {
+  .text-sm {
+    font-size: 0.875rem;
+  }
+  .text-base {
+    font-size: 1rem;
+  }
+  .text-lg {
+    font-size: 1.25rem;
+  }
+  .text-xl {
+    font-size: 1.5rem;
+  }
+}
+
+/* Better Color Contrast for Links */
+a {
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+
+a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+}
+
+/* Ensure Sufficient Touch Targets */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px;
+  }
+}
+
+/* Better Form Input Visibility */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 3px solid #7c3aed;
+  outline-offset: 2px;
+}
+
+/* Error State Accessibility */
+[aria-invalid="true"] {
+  border-color: #ef4444 !important;
+  border-width: 2px !important;
+}
+
+[role="alert"] {
+  font-weight: 600;
+  padding: 12px;
+  border-left: 4px solid #ef4444;
+}
+
+/* Loading State Accessibility */
+[aria-busy="true"] {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* Tooltip Accessibility */
+[role="tooltip"] {
+  position: absolute;
+  z-index: 1000;
+  padding: 8px 12px;
+  background: #1f2937;
+  color: white;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  max-width: 300px;
+}

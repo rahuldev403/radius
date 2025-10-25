@@ -12,11 +12,14 @@ import {
   AlertCircle,
   Calendar as CalendarIcon,
   Clock,
+  Coins,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, subHours } from "date-fns";
 import { TimeSlotPicker } from "@/components/TimeSlotPicker";
 import { ReviewList } from "@/components/ReviewList";
+import { GiveCreditsModal } from "@/components/GiveCreditsModal";
+import { UserBadges } from "@/components/UserBadges";
 
 // --- shadcn/ui components (Patched Imports) ---
 import { Button } from "@/components/ui/button";
@@ -72,6 +75,7 @@ export default function ServiceDetailPage({
   >("idle");
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [checkingConflict, setCheckingConflict] = useState(false);
+  const [showCreditsModal, setShowCreditsModal] = useState(false);
 
   useEffect(() => {
     const fetchService = async () => {
@@ -362,15 +366,34 @@ export default function ServiceDetailPage({
                   {getInitials(service.provider.full_name)}
                 </AvatarFallback>
               </Avatar>
-              <div>
+              <div className="flex-1">
                 <CardTitle className="text-xl">
                   {service.provider.full_name}
                 </CardTitle>
                 <CardDescription>Joined 2024</CardDescription>
               </div>
+              <Button
+                onClick={() => setShowCreditsModal(true)}
+                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md hover:shadow-lg transition-all"
+              >
+                <Coins className="w-4 h-4 mr-2" />
+                Give Credits
+              </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
               <p className="text-gray-700">{service.provider.bio}</p>
+
+              {/* Provider Badges */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                  Achievements
+                </h3>
+                <UserBadges
+                  userId={service.provider.id}
+                  showTitle={false}
+                  compact
+                />
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -501,6 +524,16 @@ export default function ServiceDetailPage({
           <ReviewList profileId={service.provider.id} />
         </div>
       </div>
+
+      {/* Give Credits Modal */}
+      <GiveCreditsModal
+        isOpen={showCreditsModal}
+        onClose={() => setShowCreditsModal(false)}
+        providerId={service.provider.id}
+        providerName={service.provider.full_name}
+        providerAvatar={service.provider.avatar_url}
+        serviceId={service.id}
+      />
 
       {/* Simple CSS override for the calendar to fit our theme */}
       <style jsx global>{`

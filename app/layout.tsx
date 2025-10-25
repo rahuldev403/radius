@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { AppLayout } from "@/components/AppLayout";
+import { AccessibilityProvider } from "@/lib/accessibility-context";
+import { AccessibilityButton } from "@/components/AccessibilityButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,8 +32,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AppLayout>{children}</AppLayout>
-        <Toaster />
+        <AccessibilityProvider>
+          <a href="#main-content" className="skip-to-content">
+            Skip to main content
+          </a>
+          <AppLayout>{children}</AppLayout>
+          <AccessibilityButton />
+          <Toaster />
+        </AccessibilityProvider>
       </body>
     </html>
   );

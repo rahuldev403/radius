@@ -16,6 +16,8 @@ import {
   Home,
   Menu,
   X,
+  Users,
+  Coins,
 } from "lucide-react";
 import { AIChatbot } from "@/components/AIChatbot";
 
@@ -54,6 +56,8 @@ export function Navbar() {
     { icon: Home, label: "Dashboard", path: "/dashboard" },
     { icon: MapPin, label: "Explore", path: "/home" },
     { icon: Calendar, label: "Bookings", path: "/my-bookings" },
+    { icon: Users, label: "Projects", path: "/projects" },
+    { icon: Coins, label: "Credits", path: "/credits" },
     { icon: User, label: "Profile", path: "/account" },
   ];
 
