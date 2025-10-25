@@ -166,7 +166,20 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         return;
       }
 
-      setMessage("Account created successfully! Redirecting...");
+      setMessage("Account created successfully! Signing you in...");
+
+      // Sign in the user after account creation
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        setError(
+          "Account created but sign-in failed. Please try signing in manually."
+        );
+        return;
+      }
 
       // Close modal and redirect
       setTimeout(() => {

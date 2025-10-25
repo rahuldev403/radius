@@ -250,10 +250,10 @@ export default function HomePage() {
       </div>
 
       {/* --- Map/List View Container --- */}
-      <div className="relative w-full map-container-height">
+      <div className="relative w-full h-[calc(100vh-180px)] mt-4">
         {/* --- Control Panel --- */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 w-full max-w-md px-4">
-          <div className="p-4 bg-white rounded-lg shadow-lg border border-gray-200">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-md px-4">
+          <div className="p-4 bg-white rounded-lg shadow-2xl border border-gray-200">
             <div className="flex items-center justify-between mb-2">
               <Label htmlFor="radius" className="text-base font-semibold">
                 Search Radius
@@ -323,57 +323,85 @@ export default function HomePage() {
           )}
 
           {userCoords && showListView && (
-            <div className="w-full h-full bg-gray-50 overflow-hidden">
+            <div className="w-full h-full bg-gradient-to-br from-emerald-50 via-white to-teal-50 overflow-hidden">
               <ScrollArea className="h-full">
-                <div className="max-w-4xl mx-auto p-6 space-y-4">
+                <div className="max-w-5xl mx-auto p-6 pt-32 pb-8 space-y-6">
+                  {/* Empty State */}
                   {services.length === 0 && !loading && (
-                    <Card>
-                      <CardContent className="p-8 text-center">
-                        <MapPin className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                        <h3 className="text-lg font-semibold mb-2">
+                    <Card className="border-2 border-dashed border-gray-300 bg-white/80 backdrop-blur-sm">
+                      <CardContent className="p-12 text-center">
+                        <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center">
+                          <MapPin className="w-10 h-10 text-emerald-600" />
+                        </div>
+                        <h3 className="text-2xl font-bold mb-3 text-gray-900">
                           No Services Found
                         </h3>
-                        <p className="text-gray-600 mb-4">
-                          There are no services available in your area yet.
+                        <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                          There are no services available in your area yet. Be
+                          the first to share your skills!
                         </p>
-                        <Button onClick={() => router.push("/services/new")}>
-                          Be the First to Add a Service
+                        <Button
+                          onClick={() => router.push("/services/new")}
+                          className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-8 py-6 text-base shadow-lg"
+                        >
+                          ➕ Create Your First Service
                         </Button>
                       </CardContent>
                     </Card>
                   )}
 
-                  {services.map((service) => (
+                  {/* Service Cards */}
+                  {services.map((service, index) => (
                     <Card
                       key={service.id}
-                      className="hover:shadow-lg transition-shadow"
+                      className="group hover:shadow-2xl transition-all duration-300 border-0 bg-white/90 backdrop-blur-sm hover:-translate-y-1"
                     >
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
-                            <CardTitle className="text-xl">
-                              {service.title}
-                            </CardTitle>
-                            <CardDescription className="mt-1">
-                              by {service.provider.full_name}
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-sm">
+                                {index + 1}
+                              </div>
+                              <CardTitle className="text-2xl font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">
+                                {service.title}
+                              </CardTitle>
+                            </div>
+                            <CardDescription className="flex items-center gap-2 text-base">
+                              <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                              <span className="font-medium text-gray-700">
+                                by {service.provider.full_name}
+                              </span>
                             </CardDescription>
                           </div>
-                          <Badge variant="secondary">{service.category}</Badge>
+                          <Badge
+                            variant="secondary"
+                            className="bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 border-emerald-200 px-4 py-1 text-sm font-semibold"
+                          >
+                            {service.category}
+                          </Badge>
                         </div>
                       </CardHeader>
-                      <CardContent>
-                        <p className="text-gray-700 mb-4">
+                      <CardContent className="space-y-4">
+                        <p className="text-gray-600 leading-relaxed line-clamp-2">
                           {service.description}
                         </p>
-                        <Button
-                          onClick={() => router.push(`/services/${service.id}`)}
-                          className="w-full bg-emerald-600 hover:bg-emerald-700"
-                        >
-                          View Details
-                        </Button>
+                        <div className="flex gap-3">
+                          <Button
+                            onClick={() =>
+                              router.push(`/services/${service.id}`)
+                            }
+                            className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md hover:shadow-lg transition-all"
+                          >
+                            View Details →
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
+
+                  {/* Bottom Spacing */}
+                  <div className="h-4"></div>
                 </div>
               </ScrollArea>
             </div>

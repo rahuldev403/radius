@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyOTP } from "@/lib/otp";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+
+// Create admin client for bypassing email confirmation
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  }
+);
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,32 +42,18 @@ export async function POST(request: NextRequest) {
     // OTP verified successfully
     // Now complete the user signup by creating auth user
     if (password) {
-      const { data, error } = await supabase.auth.signUp({
+      // Use admin client to create user with email already confirmed
+      const { data, error } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
-        options: {
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/callback`,
-          data: {
-            email_verified: true, // Mark as verified since OTP passed
-          },
+        email_confirm: true, // Skip email verification since OTP is verified
+        user_metadata: {
+          email_verified: true,
         },
       });
 
       if (error) {
         return NextResponse.json({ error: error.message }, { status: 400 });
-      }
-
-      // Auto sign in after signup
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (signInError) {
-        return NextResponse.json(
-          { error: signInError.message },
-          { status: 400 }
-        );
       }
 
       return NextResponse.json({
