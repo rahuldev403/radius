@@ -29,13 +29,8 @@ function AccountPageContent() {
 
     setUser(user);
 
-    // If onboarding, open modal automatically
-    if (isOnboarding) {
-      setIsModalOpen(true);
-    } else {
-      // If not onboarding, redirect to dashboard
-      router.push("/dashboard");
-    }
+    // Always open modal for account page
+    setIsModalOpen(true);
   };
 
   return (
@@ -44,9 +39,7 @@ function AccountPageContent() {
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false);
-          if (!isOnboarding) {
-            router.push("/dashboard");
-          }
+          router.push(isOnboarding ? "/home" : "/dashboard");
         }}
         user={user}
         isOnboarding={isOnboarding}

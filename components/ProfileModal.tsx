@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,7 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { X, MapPin, User as UserIcon, Check, Loader2 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  X,
+  MapPin,
+  User as UserIcon,
+  Check,
+  Loader2,
+  Camera,
+} from "lucide-react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 interface ProfileModalProps {
@@ -28,9 +36,12 @@ export function ProfileModal({
   const [loading, setLoading] = useState(false);
   const [fullName, setFullName] = useState("");
   const [bio, setBio] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
   const [hasSetLocation, setHasSetLocation] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     loading: geoLoading,
@@ -51,13 +62,61 @@ export function ProfileModal({
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("full_name, bio")
+      .select("full_name, bio, avatar_url")
       .eq("id", user.id)
       .single();
 
     if (profile) {
       setFullName(profile.full_name || "");
       setBio(profile.bio || "");
+      setAvatarUrl(profile.avatar_url || "");
+    }
+  };
+
+  // Upload avatar
+  const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+
+      if (!event.target.files || event.target.files.length === 0) {
+        return;
+      }
+
+      const file = event.target.files[0];
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${user?.id}-${Math.random()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(filePath);
+
+      // Update profile with avatar URL
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("id", user?.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setAvatarUrl(publicUrl);
+      setMessage("Avatar updated successfully!");
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -73,6 +132,7 @@ export function ProfileModal({
       id: user.id,
       full_name: fullName,
       bio: bio,
+      avatar_url: avatarUrl,
     };
 
     const { error } = await supabase.from("profiles").upsert(updates);
@@ -206,6 +266,48 @@ export function ProfileModal({
 
                 {/* Form */}
                 <form onSubmit={updateProfile} className="space-y-6">
+                  {/* Avatar Upload */}
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="relative group">
+                      <Avatar className="w-24 h-24 border-4 border-emerald-100">
+                        <AvatarImage src={avatarUrl} alt={fullName || "User"} />
+                        <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-500 text-white text-2xl">
+                          {fullName
+                            ? fullName
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .toUpperCase()
+                                .slice(0, 2)
+                            : user?.email?.[0].toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                        className="absolute bottom-0 right-0 p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg transition-all group-hover:scale-110"
+                        title="Upload avatar"
+                      >
+                        {uploading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Camera className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={uploadAvatar}
+                      className="hidden"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Click camera to upload photo
+                    </p>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="email" className="text-sm font-medium">
                       Email
@@ -333,7 +435,9 @@ export function ProfileModal({
 
                 <div>
                   <h3 className="text-2xl font-bold mb-2">
-                    {isOnboarding ? "Welcome to Radius!" : "Update Your Profile"}
+                    {isOnboarding
+                      ? "Welcome to Radius!"
+                      : "Update Your Profile"}
                   </h3>
                   <p className="text-emerald-50">
                     {isOnboarding
