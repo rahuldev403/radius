@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Navbar } from "@/components/Navbar";
 import { OnboardingTour } from "@/components/OnboardingTour";
+import { ProfileModal } from "@/components/ProfileModal";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,6 +28,7 @@ import {
   Sparkles,
   Target,
   Award,
+  Edit,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -34,6 +36,8 @@ import { toast } from "sonner";
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [authUser, setAuthUser] = useState<any>(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [stats, setStats] = useState({
     totalBookings: 0,
     activeServices: 0,
@@ -57,6 +61,8 @@ export default function DashboardPage() {
         router.push("/");
         return;
       }
+
+      setAuthUser(authUser);
 
       const { data: profile } = await supabase
         .from("profiles")
@@ -298,10 +304,26 @@ export default function DashboardPage() {
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
             Your Skill Sharing Hub
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-6">
             Connect, collaborate, and grow with professionals in your area
           </p>
+          <Button
+            onClick={() => setIsProfileModalOpen(true)}
+            variant="outline"
+            className="inline-flex items-center gap-2"
+          >
+            <Edit className="w-4 h-4" />
+            Edit Profile
+          </Button>
         </motion.div>
+
+        {/* Profile Modal */}
+        <ProfileModal
+          isOpen={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
+          user={authUser}
+          isOnboarding={false}
+        />
 
         {/* Stats Cards */}
         <motion.div

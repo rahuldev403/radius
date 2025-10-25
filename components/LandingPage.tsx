@@ -27,7 +27,17 @@ if (typeof window !== "undefined") {
 export default function LandingPage() {
   const router = useRouter();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    // If user just logged out, don't show loading state
+    if (typeof window !== "undefined") {
+      const justLoggedOut = sessionStorage.getItem("just_logged_out");
+      if (justLoggedOut) {
+        sessionStorage.removeItem("just_logged_out");
+        return false;
+      }
+    }
+    return true;
+  });
   const heroRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
 
@@ -54,6 +64,7 @@ export default function LandingPage() {
     } catch (error) {
       console.error("Auth check error:", error);
     } finally {
+      // Set loading to false quickly to show landing page
       setLoading(false);
     }
   };

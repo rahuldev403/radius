@@ -25,8 +25,23 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/";
+    try {
+      // Set a flag to skip auth check on next load (for faster logout UX)
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("just_logged_out", "true");
+      }
+
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+
+      // Use window.location.replace for a hard redirect without history
+      // This ensures the page fully reloads and clears all state
+      window.location.replace("/");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      // Still redirect even if there's an error
+      window.location.replace("/");
+    }
   };
 
   const navItems = [
