@@ -35,15 +35,11 @@ export function CreateServiceModal({
   const router = useRouter();
 
   const categories = [
-    "Tutoring",
+    "Teaching & Tutoring",
     "Home Services",
-    "Tech Support",
     "Creative Services",
     "Fitness & Wellness",
-    "Food & Catering",
-    "Pet Services",
-    "Transportation",
-    "Events & Entertainment",
+    "Technology",
     "Professional Services",
     "Other",
   ];
@@ -163,7 +159,7 @@ export function CreateServiceModal({
                       <SelectTrigger className="text-base">
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="z-[99999]">
                         {categories.map((cat) => (
                           <SelectItem key={cat} value={cat}>
                             {cat}

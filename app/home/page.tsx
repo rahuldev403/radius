@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { useGeolocation } from "../hooks/use-geolocation";
 import { AiRecommendations } from "@/components/AiRecommendations";
+import { CreateServiceModal } from "@/components/CreateServiceModal";
 
 // --- shadcn/ui components ---
 import { Slider } from "@/components/ui/slider";
@@ -55,6 +56,7 @@ export default function HomePage() {
   );
   const [showListView, setShowListView] = useState(false);
   const [showRadiusPanel, setShowRadiusPanel] = useState(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // Dynamically import the Map component only on the client-side
   const Map = useMemo(
@@ -382,7 +384,7 @@ export default function HomePage() {
                           the first to share your skills!
                         </p>
                         <Button
-                          onClick={() => router.push("/services/new")}
+                          onClick={() => setIsCreateModalOpen(true)}
                           className="bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-8 py-6 text-base shadow-lg"
                         >
                           Create Your First Service
@@ -471,6 +473,12 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {/* Create Service Modal */}
+      <CreateServiceModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
     </div>
   );
 }

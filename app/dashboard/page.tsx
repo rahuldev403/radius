@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { ProfileModal } from "@/components/ProfileModal";
+import { CreateServiceModal } from "@/components/CreateServiceModal";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -37,6 +38,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [authUser, setAuthUser] = useState<any>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [stats, setStats] = useState({
     totalBookings: 0,
     activeServices: 0,
@@ -169,7 +171,7 @@ export default function DashboardPage() {
       label: "Create Service",
       icon: Target,
       variant: "default" as const,
-      action: () => router.push("/services/new"),
+      action: () => setIsCreateModalOpen(true),
     },
     {
       label: "Explore Map",
@@ -259,7 +261,7 @@ export default function DashboardPage() {
         label: "Create Your First Service",
         onClick: () => {
           localStorage.setItem("hasSeenTour", "true");
-          router.push("/services/new");
+          setIsCreateModalOpen(true);
         },
       },
     },
@@ -476,7 +478,7 @@ export default function DashboardPage() {
                     <Button
                       variant="secondary"
                       size="lg"
-                      onClick={() => router.push("/services/new")}
+                      onClick={() => setIsCreateModalOpen(true)}
                       className="bg-white text-emerald-600 hover:bg-gray-100"
                     >
                       Create Service
@@ -496,6 +498,19 @@ export default function DashboardPage() {
           </motion.div>
         )}
       </div>
+
+      {/* Create Service Modal */}
+      <CreateServiceModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
+
+      {/* Profile Modal */}
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        user={authUser}
+      />
     </div>
   );
 }
