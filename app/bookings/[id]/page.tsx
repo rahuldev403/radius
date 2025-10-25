@@ -269,12 +269,7 @@ export default function BookingChatPage({
     currentUser?.id === booking.provider.id ? booking.seeker : booking.provider;
 
   if (showVideoCall) {
-    return (
-      <VideoCall
-        bookingId={id}
-        onClose={() => setShowVideoCall(false)}
-      />
-    );
+    return <VideoCall bookingId={id} onClose={() => setShowVideoCall(false)} />;
   }
 
   return (
