@@ -25,7 +25,7 @@ RETURNS TABLE (
 ) AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
+  SELECT
     s.id,
     s.title,
     s.description,
@@ -35,14 +35,14 @@ BEGIN
     p.location AS provider_location
   FROM services s
   JOIN profiles p ON s.provider_id = p.id
-  WHERE 
+  WHERE
     p.location IS NOT NULL
     AND ST_DWithin(
       p.location,
       ST_SetSRID(ST_MakePoint(user_lng, user_lat), 4326)::geography,
       distance_meters
     )
-  ORDER BY 
+  ORDER BY
     ST_Distance(
       p.location,
       ST_SetSRID(ST_MakePoint(user_lng, user_lat), 4326)::geography
@@ -58,9 +58,7 @@ If the RPC function is giving issues, you can replace it with a direct query in 
 ```typescript
 // In app/home/page.tsx, replace the fetchServices function with:
 
-const { data, error } = await supabase
-  .from('services')
-  .select(`
+const { data, error } = await supabase.from("services").select(`
     id,
     title,
     description,
@@ -73,39 +71,46 @@ const { data, error } = await supabase
   `);
 
 // Then filter by distance in the frontend
-const servicesWithDistance = data?.map(service => {
-  if (!service.provider?.location?.coordinates) return null;
-  
-  const [lng, lat] = service.provider.location.coordinates;
-  const distance = calculateDistance(
-    currentLocation.latitude,
-    currentLocation.longitude,
-    lat,
-    lng
-  );
-  
-  return {
-    ...service,
-    distance
-  };
-}).filter(s => s && s.distance <= radius * 1000); // radius in km to meters
+const servicesWithDistance = data
+  ?.map((service) => {
+    if (!service.provider?.location?.coordinates) return null;
+
+    const [lng, lat] = service.provider.location.coordinates;
+    const distance = calculateDistance(
+      currentLocation.latitude,
+      currentLocation.longitude,
+      lat,
+      lng
+    );
+
+    return {
+      ...service,
+      distance,
+    };
+  })
+  .filter((s) => s && s.distance <= radius * 1000); // radius in km to meters
 ```
 
 ## Helper Function for Distance Calculation
 
 ```typescript
 // Add this function to calculate distance (Haversine formula)
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+function calculateDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
   const R = 6371e3; // Earth's radius in meters
-  const φ1 = lat1 * Math.PI / 180;
-  const φ2 = lat2 * Math.PI / 180;
-  const Δφ = (lat2 - lat1) * Math.PI / 180;
-  const Δλ = (lon2 - lon1) * Math.PI / 180;
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
 
-  const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-          Math.cos(φ1) * Math.cos(φ2) *
-          Math.sin(Δλ/2) * Math.sin(Δλ/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
   return R * c; // Distance in meters
 }
@@ -118,13 +123,15 @@ If you just want to see the map working quickly, you can use a simpler approach 
 ## Debugging Steps
 
 1. Check if the RPC function exists:
+
    ```sql
-   SELECT routine_name 
-   FROM information_schema.routines 
+   SELECT routine_name
+   FROM information_schema.routines
    WHERE routine_name = 'get_services_nearby';
    ```
 
 2. Test the function directly:
+
    ```sql
    SELECT * FROM get_services_nearby(40.7128, -74.0060, 5000);
    ```
@@ -137,6 +144,7 @@ If you just want to see the map working quickly, you can use a simpler approach 
 ## Current Code Changes
 
 I've updated the code to:
+
 1. ✅ Handle missing location data gracefully in the Map component
 2. ✅ Add console logging to debug the data structure
 3. ✅ Format the provider data properly from the RPC response

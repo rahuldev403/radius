@@ -84,10 +84,14 @@ export function Map({ services, center, zoom = 13 }: MapProps) {
         }
 
         const [longitude, latitude] = service.provider.location.coordinates;
-        
+
         // Validate coordinates
-        if (typeof latitude !== 'number' || typeof longitude !== 'number') {
-          console.warn(`Invalid coordinates for service ${service.id}:`, latitude, longitude);
+        if (typeof latitude !== "number" || typeof longitude !== "number") {
+          console.warn(
+            `Invalid coordinates for service ${service.id}:`,
+            latitude,
+            longitude
+          );
           return null;
         }
 
