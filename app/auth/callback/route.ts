@@ -28,8 +28,8 @@ export async function GET(request: Request) {
   if (code) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  // Next.js cookies() typing can differ between versions; cast to any for runtime usage
-  const cookieStore: any = cookies();
+    // Next.js cookies() typing can differ between versions; cast to any for runtime usage
+    const cookieStore: any = cookies();
 
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
