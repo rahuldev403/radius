@@ -1,6 +1,10 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
+
+// Force Node.js runtime and disable caching so cookies can be set on Vercel
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
@@ -22,8 +26,33 @@ export async function GET(request: Request) {
   }
 
   if (code) {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  // Next.js cookies() typing can differ between versions; cast to any for runtime usage
+  const cookieStore: any = cookies();
+
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        get(name: string) {
+          // Use the request-bound cookie store
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          try {
+            cookieStore.set(name, value, options);
+          } catch (e) {
+            console.error("Failed setting cookie", name, e);
+          }
+        },
+        remove(name: string, options: CookieOptions) {
+          try {
+            cookieStore.set(name, "", { ...options, maxAge: 0 });
+          } catch (e) {
+            console.error("Failed removing cookie", name, e);
+          }
+        },
+      },
+    });
 
     try {
       console.log("Exchanging code for session...");
