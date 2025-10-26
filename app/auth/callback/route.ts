@@ -40,7 +40,12 @@ export async function GET(request: Request) {
           JSON.stringify(sessionError, null, 2)
         );
         return NextResponse.redirect(
-          new URL(`/?error=session_failed`, requestUrl.origin)
+          new URL(
+            `/?error=session_failed&message=${encodeURIComponent(
+              sessionError.message
+            )}`,
+            requestUrl.origin
+          )
         );
       }
 
@@ -50,19 +55,46 @@ export async function GET(request: Request) {
 
       if (session?.user) {
         console.log("✓ Google OAuth successful! User:", session.user.email);
-        console.log("→ Redirecting to /home");
 
-        return NextResponse.redirect(new URL("/home", requestUrl.origin));
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name, location")
+          .eq("id", session.user.id)
+          .single();
+
+        const isProfileComplete =
+          profile && profile.full_name && profile.location;
+
+        console.log(
+          "→ Redirecting to",
+          isProfileComplete ? "/dashboard" : "/account?onboarding=true"
+        );
+
+        if (isProfileComplete) {
+          return NextResponse.redirect(
+            new URL("/dashboard", requestUrl.origin)
+          );
+        } else {
+          return NextResponse.redirect(
+            new URL("/account?onboarding=true", requestUrl.origin)
+          );
+        }
       }
 
       console.log("⚠ No user in session");
 
-      return NextResponse.redirect(new URL("/home", requestUrl.origin));
+      return NextResponse.redirect(new URL("/dashboard", requestUrl.origin));
     } catch (error: any) {
       console.error("❌ Error in OAuth callback:", error);
+      console.error("Error message:", error.message);
       console.error("Error stack:", error.stack);
       return NextResponse.redirect(
-        new URL(`/?error=callback_failed`, requestUrl.origin)
+        new URL(
+          `/?error=callback_failed&message=${encodeURIComponent(
+            error.message || "Unknown error"
+          )}`,
+          requestUrl.origin
+        )
       );
     }
   }
