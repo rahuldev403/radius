@@ -81,15 +81,15 @@ export default function DashboardPage() {
         .eq("id", clerkUser.id)
         .single();
 
-      if (profileError && profileError.code === 'PGRST116') {
+      if (profileError && profileError.code === "PGRST116") {
         // Profile doesn't exist, create it
         const { data: newProfile, error: insertError } = await supabase
           .from("profiles")
           .insert({
             id: clerkUser.id,
             email: clerkUser.emailAddresses[0]?.emailAddress,
-            full_name: clerkUser.fullName || '',
-            avatar_url: clerkUser.imageUrl || '',
+            full_name: clerkUser.fullName || "",
+            avatar_url: clerkUser.imageUrl || "",
           })
           .select()
           .single();
@@ -101,7 +101,7 @@ export default function DashboardPage() {
         }
 
         setUser(newProfile);
-        
+
         // If profile was just created, show onboarding
         if (!newProfile?.location || !newProfile?.full_name) {
           router.push("/account?onboarding=true");
@@ -113,7 +113,7 @@ export default function DashboardPage() {
         return;
       } else {
         setUser(profile);
-        
+
         // Check if profile is incomplete
         if (!profile?.location || !profile?.full_name) {
           router.push("/account?onboarding=true");

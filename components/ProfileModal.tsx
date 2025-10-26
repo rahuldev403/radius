@@ -307,7 +307,8 @@ export function ProfileModal({
                                 .join("")
                                 .toUpperCase()
                                 .slice(0, 2)
-                            : user?.emailAddresses?.[0]?.emailAddress?.[0]?.toUpperCase() || "U"}
+                            : user?.emailAddresses?.[0]?.emailAddress?.[0]?.toUpperCase() ||
+                              "U"}
                         </AvatarFallback>
                       </Avatar>
                       <button

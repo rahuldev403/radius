@@ -74,7 +74,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     <SignUp
                       appearance={{
                         elements: {
-                          formButtonPrimary: 
+                          formButtonPrimary:
                             "bg-emerald-600 hover:bg-emerald-700 text-sm normal-case",
                           card: "shadow-none",
                           rootBox: "w-full",
@@ -87,7 +87,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     <SignIn
                       appearance={{
                         elements: {
-                          formButtonPrimary: 
+                          formButtonPrimary:
                             "bg-emerald-600 hover:bg-emerald-700 text-sm normal-case",
                           card: "shadow-none",
                           rootBox: "w-full",

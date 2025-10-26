@@ -1,4 +1,4 @@
-import { SignUp } from '@clerk/nextjs'
+import { SignUp } from "@clerk/nextjs";
 
 export default function SignUpPage() {
   return (
@@ -6,13 +6,13 @@ export default function SignUpPage() {
       <SignUp
         appearance={{
           elements: {
-            formButtonPrimary: 
-              'bg-emerald-600 hover:bg-emerald-700 text-sm normal-case',
-            card: 'shadow-xl',
+            formButtonPrimary:
+              "bg-emerald-600 hover:bg-emerald-700 text-sm normal-case",
+            card: "shadow-xl",
           },
         }}
         redirectUrl="/dashboard"
       />
     </div>
-  )
+  );
 }

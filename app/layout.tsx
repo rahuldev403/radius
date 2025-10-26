@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AppLayout } from "@/components/AppLayout";
 import { AccessibilityProvider } from "@/lib/accessibility-context";
 import { AccessibilityButton } from "@/components/AccessibilityButton";
-import { ClerkProvider } from '@clerk/nextjs'
+import { ClerkProvider } from "@clerk/nextjs";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
