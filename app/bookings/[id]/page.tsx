@@ -9,7 +9,6 @@ import { VideoCall } from "@/components/VideoCall";
 import { toast } from "sonner";
 import React from "react";
 
-// --- shadcn/ui components ---
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,7 +21,6 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-// Define types
 type Message = {
   id: number;
   content: string;
@@ -48,7 +46,7 @@ type User = {
 export default function BookingChatPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const { id } = React.use(params);
   const router = useRouter();
@@ -63,28 +61,24 @@ export default function BookingChatPage({
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Request notification permission on mount
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission();
     }
   }, []);
 
-  // Helper to scroll to the bottom of the chat
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
   };
 
-  // --- Data Fetching Effect ---
   useEffect(() => {
     const setupChat = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        // 1. Get current user
         const {
           data: { user },
         } = await supabase.auth.getUser();
@@ -94,7 +88,6 @@ export default function BookingChatPage({
         }
         setCurrentUser(user);
 
-        // 2. Fetch booking details to identify the two chat participants
         const { data: bookingData, error: bookingError } = await supabase
           .from("bookings")
           .select(
@@ -110,7 +103,6 @@ export default function BookingChatPage({
 
         if (bookingError) throw bookingError;
 
-        // Normalize the data - Supabase may return arrays for foreign keys
         const normalizedBooking = {
           ...bookingData,
           provider: Array.isArray(bookingData.provider)
@@ -124,7 +116,6 @@ export default function BookingChatPage({
             : bookingData.service,
         };
 
-        // Check if user is part of this booking
         if (
           user.id !== normalizedBooking.provider.id &&
           user.id !== normalizedBooking.seeker.id
@@ -136,17 +127,14 @@ export default function BookingChatPage({
         const providerId = normalizedBooking.provider.id;
         const seekerId = normalizedBooking.seeker.id;
 
-        // 3. Fetch initial messages
         const { data: messagesData, error: messagesError } = await supabase
           .from("messages")
           .select("*")
           .in("sender_id", [providerId, seekerId])
           .in("receiver_id", [providerId, seekerId]);
-        // .order('created_at', { ascending: true }); // We sort in JS after, or here
 
         if (messagesError) throw messagesError;
 
-        // Filter messages to only those between these two users
         const relevantMessages = messagesData.filter(
           (m) =>
             (m.sender_id === providerId && m.receiver_id === seekerId) ||
@@ -171,17 +159,14 @@ export default function BookingChatPage({
     setupChat();
   }, [id, supabase, router]);
 
-  // --- Real-time Subscription Effect ---
   useEffect(() => {
     if (!booking || !currentUser) return;
 
-    // Get the two user IDs for the subscription filter
     const providerId = booking.provider.id;
     const seekerId = booking.seeker.id;
 
     console.log("🔌 Setting up realtime subscription for chat:", id);
 
-    // Listen to new messages in the 'messages' table
     const channel = supabase
       .channel(`chat_room:${id}`, {
         config: {
@@ -195,14 +180,13 @@ export default function BookingChatPage({
           event: "INSERT",
           schema: "public",
           table: "messages",
-          // Filter to only messages relevant to this chat
+
           filter: `sender_id=in.(${providerId},${seekerId})`,
         },
         (payload) => {
           console.log("📨 New message received via realtime:", payload);
           const newMessage = payload.new as Message;
 
-          // Verify the message belongs to this chat (between provider and seeker)
           const isRelevant =
             (newMessage.sender_id === providerId &&
               newMessage.receiver_id === seekerId) ||
@@ -216,7 +200,6 @@ export default function BookingChatPage({
 
           console.log("✅ Adding new message to state:", newMessage.id);
 
-          // Add message to state if not already present
           setMessages((currentMessages) => {
             const exists = currentMessages.some(
               (msg) => msg.id === newMessage.id
@@ -228,14 +211,12 @@ export default function BookingChatPage({
             return [...currentMessages, newMessage];
           });
 
-          // Show notification if message is from other user
           if (newMessage.sender_id !== currentUser.id) {
             const otherUser =
               newMessage.sender_id === booking.provider.id
                 ? booking.provider
                 : booking.seeker;
 
-            // Browser notification
             if (
               "Notification" in window &&
               Notification.permission === "granted"
@@ -247,10 +228,8 @@ export default function BookingChatPage({
               });
             }
 
-            // Toast notification
             toast.info(`${otherUser.full_name}: ${newMessage.content}`);
 
-            // Update unread count
             setUnreadCount((prev) => prev + 1);
           }
         }
@@ -267,7 +246,6 @@ export default function BookingChatPage({
           console.log("📝 Message updated via realtime:", payload);
           const updatedMessage = payload.new as Message;
 
-          // Verify the message belongs to this chat
           const isRelevant =
             (updatedMessage.sender_id === providerId &&
               updatedMessage.receiver_id === seekerId) ||
@@ -295,16 +273,13 @@ export default function BookingChatPage({
           console.log("📅 Booking updated via realtime:", payload);
           const updatedBooking = payload.new as any;
 
-          // Update booking state
           setBooking((prev) => (prev ? { ...prev, ...updatedBooking } : prev));
 
-          // Check if video call or status changed
           const otherUser =
             currentUser.id === booking?.provider.id
               ? booking?.seeker
               : booking?.provider;
 
-          // Toast notification for booking updates
           toast.info(`Booking updated by ${otherUser?.full_name}`, {
             description: "Check the latest booking details",
             duration: 5000,
@@ -331,24 +306,20 @@ export default function BookingChatPage({
         }
       });
 
-    // Cleanup on unmount
     return () => {
       console.log("🧹 Cleaning up realtime subscription for booking:", id);
       supabase.removeChannel(channel);
     };
   }, [booking, currentUser, id, supabase]);
 
-  // Scroll to bottom when new messages arrive
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Mark messages as read when viewing chat
   useEffect(() => {
     if (!currentUser || !booking || messages.length === 0) return;
 
     const markMessagesAsRead = async () => {
-      // Get all unread messages sent to current user
       const unreadMessages = messages.filter(
         (msg) => msg.receiver_id === currentUser.id && !msg.read
       );
@@ -358,7 +329,6 @@ export default function BookingChatPage({
       const unreadIds = unreadMessages.map((msg) => msg.id);
 
       try {
-        // Try bulk update first (more efficient)
         const { error: bulkError } = await supabase
           .from("messages")
           .update({ read: true })
@@ -366,7 +336,6 @@ export default function BookingChatPage({
           .eq("receiver_id", currentUser.id);
 
         if (!bulkError) {
-          // Bulk update succeeded
           setMessages((currentMessages) =>
             currentMessages.map((msg) =>
               unreadIds.includes(msg.id) ? { ...msg, read: true } : msg
@@ -381,7 +350,6 @@ export default function BookingChatPage({
           bulkError
         );
 
-        // Fall back to individual updates if bulk fails
         const updatePromises = unreadIds.map(async (msgId) => {
           const { error } = await supabase
             .from("messages")
@@ -405,14 +373,12 @@ export default function BookingChatPage({
         const successCount = results.filter((r) => r.success).length;
 
         if (successCount > 0) {
-          // Update local state for successfully marked messages
           setMessages((currentMessages) =>
             currentMessages.map((msg) =>
               unreadIds.includes(msg.id) ? { ...msg, read: true } : msg
             )
           );
 
-          // Reset unread count
           setUnreadCount(0);
         } else if (unreadIds.length > 0) {
           console.warn(`Failed to mark ${unreadIds.length} message(s) as read`);
@@ -422,7 +388,6 @@ export default function BookingChatPage({
       }
     };
 
-    // Debounce the mark as read operation
     const timeoutId = setTimeout(() => {
       markMessagesAsRead();
     }, 500);
@@ -430,7 +395,6 @@ export default function BookingChatPage({
     return () => clearTimeout(timeoutId);
   }, [messages, currentUser, booking]);
 
-  // Update page title with unread count
   useEffect(() => {
     if (unreadCount > 0) {
       document.title = `(${unreadCount}) New Messages - Radius`;
@@ -443,7 +407,6 @@ export default function BookingChatPage({
     e.preventDefault();
     if (!newMessage.trim() || !currentUser || !booking) return;
 
-    // Determine who is the receiver
     const receiverId =
       currentUser.id === booking.provider.id
         ? booking.seeker.id
@@ -457,10 +420,9 @@ export default function BookingChatPage({
       });
 
       if (error) throw error;
-      setNewMessage(""); // Clear the input
+      setNewMessage("");
     } catch (err: any) {
       console.error("Error sending message:", err);
-      // Optionally show an error to the user
     }
   };
 
@@ -473,7 +435,6 @@ export default function BookingChatPage({
       .toUpperCase();
   };
 
-  // --- Render Logic ---
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -490,7 +451,6 @@ export default function BookingChatPage({
     );
   }
 
-  // Determine who the "other user" is
   const otherUser =
     currentUser?.id === booking.provider.id ? booking.seeker : booking.provider;
 
@@ -500,13 +460,11 @@ export default function BookingChatPage({
 
   return (
     <>
-      {/* Global styles for chat scrollbar */}
       <style jsx global>{`
         body {
           overflow: hidden;
         }
 
-        /* Custom Scrollbar Styles */
         .custom-scrollbar::-webkit-scrollbar {
           width: 12px;
           height: 12px;

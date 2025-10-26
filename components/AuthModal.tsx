@@ -25,7 +25,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // OTP states
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [otp, setOtp] = useState("");
   const [otpLoading, setOtpLoading] = useState(false);
@@ -33,10 +32,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const formRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
 
-  // GSAP animations when modal opens
   useEffect(() => {
     if (isOpen && formRef.current && logoRef.current) {
-      // Animate logo with GSAP
       gsap.fromTo(
         logoRef.current,
         { scale: 0, rotation: -180, opacity: 0 },
@@ -49,7 +46,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         }
       );
 
-      // Animate form fields with stagger
       const inputs = formRef.current.querySelectorAll(".form-field");
       gsap.fromTo(
         inputs,
@@ -83,7 +79,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       return;
     }
 
-    // Check if user has completed their profile
     if (data.user) {
       const { data: profile } = await supabase
         .from("profiles")
@@ -91,13 +86,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         .eq("id", data.user.id)
         .single();
 
-      // Check if profile is complete (has name and location)
       const isProfileComplete =
         profile && profile.full_name && profile.location;
 
       setMessage("Logged in successfully! Redirecting...");
 
-      // Close modal and redirect with full page reload
       onClose();
 
       setTimeout(() => {
@@ -119,7 +112,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setLoading(true);
 
     try {
-      // Send OTP to email
       const response = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -148,7 +140,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setOtpLoading(true);
 
     try {
-      // Verify OTP and create account
       const response = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -168,7 +159,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
       setMessage("Account created successfully! Signing you in...");
 
-      // Sign in the user after account creation
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -181,7 +171,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         return;
       }
 
-      // Close modal and redirect
       setTimeout(() => {
         onClose();
         window.location.href = "/account?onboarding=true";
@@ -235,8 +224,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       if (error) {
         throw error;
       }
-
-      // OAuth will redirect, so we don't need to do anything else
     } catch (err: any) {
       setError(err.message || "Google sign-in failed");
       setLoading(false);
@@ -265,7 +252,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -275,7 +261,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             onClick={onClose}
           />
 
-          {/* Modal */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -285,7 +270,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden">
-              {/* Close Button */}
               <motion.button
                 whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
@@ -295,7 +279,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </motion.button>
 
-              {/* Header with animated logo */}
               <div className="pt-8 pb-6 px-8 text-center bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950 dark:to-teal-950">
                 <div ref={logoRef} className="flex justify-center mb-4">
                   <div className="p-3 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
@@ -329,10 +312,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 </motion.p>
               </div>
 
-              {/* Form */}
               <form onSubmit={handleSubmit} className="p-8">
                 <div ref={formRef} className="space-y-5">
-                  {/* Google Sign In Button - Show only if not in OTP mode */}
                   {!showOtpInput && (
                     <motion.div className="form-field">
                       <Button
@@ -348,7 +329,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     </motion.div>
                   )}
 
-                  {/* Divider */}
                   {!showOtpInput && (
                     <div className="form-field relative">
                       <div className="absolute inset-0 flex items-center">
@@ -362,7 +342,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     </div>
                   )}
 
-                  {/* Email Field */}
                   <div className="form-field space-y-2">
                     <Label
                       htmlFor="email"
@@ -383,7 +362,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     />
                   </div>
 
-                  {/* Password Field - Hide during OTP verification */}
                   {!showOtpInput && (
                     <div className="form-field space-y-2">
                       <Label
@@ -406,7 +384,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     </div>
                   )}
 
-                  {/* OTP Input - Show only during OTP verification */}
                   {showOtpInput && (
                     <div className="form-field space-y-2">
                       <Label
@@ -439,7 +416,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     </div>
                   )}
 
-                  {/* Messages */}
                   <AnimatePresence mode="wait">
                     {message && (
                       <motion.div
@@ -467,7 +443,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     )}
                   </AnimatePresence>
 
-                  {/* Submit Button */}
                   <motion.div
                     className="form-field"
                     whileHover={{ scale: 1.02 }}
@@ -488,7 +463,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     </Button>
                   </motion.div>
 
-                  {/* Toggle Mode - Hide during OTP verification */}
                   {!showOtpInput && (
                     <div className="form-field text-center">
                       <button

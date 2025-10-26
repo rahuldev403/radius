@@ -8,6 +8,20 @@
 [![Supabase](https://img.shields.io/badge/Supabase-Database-3ecf8e?style=for-the-badge&logo=supabase)](https://supabase.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38bdf8?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 
+## 🚀 Ready to Deploy!
+
+This app is **production-ready** and configured for deployment on:
+
+- **Vercel** (Next.js App)
+- **Railway** (WebSocket Server)
+- **Supabase** (Database)
+
+👉 **[Start Deployment Guide →](STEP_BY_STEP_DEPLOYMENT.md)**
+
+📋 **[Quick Reference Card →](QUICK_REFERENCE_CARD.md)**
+
+---
+
 ## 🌟 What is Radius?
 
 **Radius** is a revolutionary hyperlocal platform that connects neighbors based on skills and location. Whether you're looking for a guitar teacher, a web developer, or a personal trainer in your neighborhood, Radius makes it effortless to find and connect with talented people nearby.
@@ -244,6 +258,53 @@ Interactive Leaflet map showing nearby services with custom markers and radius v
 ### Chat Interface
 
 Real-time messaging with typing indicators and read receipts.
+
+## 🚀 Deployment
+
+This application is designed for easy deployment with separated concerns:
+
+### Quick Deploy
+
+**1. WebSocket Server → Railway**
+
+```bash
+# See STEP_BY_STEP_DEPLOYMENT.md for detailed instructions
+```
+
+**2. Next.js App → Vercel**
+
+```bash
+# One-click deployment from GitHub
+```
+
+### Documentation
+
+- 📖 **[Complete Deployment Guide](STEP_BY_STEP_DEPLOYMENT.md)** - Full walkthrough
+- ✅ **[Deployment Checklist](DEPLOYMENT_CHECKLIST.md)** - Track your progress
+- ⚡ **[Quick Reference](QUICK_REFERENCE_CARD.md)** - Commands and URLs
+- 🎨 **[Visual Guide](VISUAL_DEPLOYMENT_GUIDE.md)** - Architecture diagrams
+
+### Architecture
+
+```
+┌─────────────┐         ┌─────────────┐
+│   Vercel    │◄───────►│   Railway   │
+│  Next.js    │   WSS   │  WebSocket  │
+└──────┬──────┘         └─────────────┘
+       │
+       ▼
+┌─────────────┐
+│  Supabase   │
+│  Database   │
+└─────────────┘
+```
+
+### Cost
+
+- **Vercel:** Free tier
+- **Railway:** ~$5/month
+- **Supabase:** Free tier
+- **Total:** ~$5/month
 
 ## 🤝 Contributing
 

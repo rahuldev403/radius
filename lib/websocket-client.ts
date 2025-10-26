@@ -1,4 +1,3 @@
-// WebSocket Client for Real-Time Chat
 type MessageCallback = (message: any) => void;
 type StatusCallback = (status: "connected" | "disconnected" | "error") => void;
 
@@ -14,12 +13,14 @@ class WebSocketClient {
   private userId: string | null = null;
 
   constructor() {
-    // Use environment variable or default to localhost
-    const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsHost =
-      process.env.NEXT_PUBLIC_WS_URL ||
-      `${wsProtocol}//${window.location.host}`;
-    this.url = `${wsHost}/api/ws`;
+    if (process.env.NEXT_PUBLIC_WS_URL) {
+      this.url = process.env.NEXT_PUBLIC_WS_URL;
+    } else {
+      const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsHost = `${wsProtocol}//localhost:8080`;
+      this.url = wsHost;
+    }
+    console.log("🔌 WebSocket URL:", this.url);
   }
 
   connect(userId: string) {
@@ -39,13 +40,11 @@ class WebSocketClient {
         this.reconnectAttempts = 0;
         this.notifyStatus("connected");
 
-        // Send authentication
         this.send({
           type: "auth",
           userId: this.userId,
         });
 
-        // Start heartbeat
         this.startHeartbeat();
       };
 
@@ -54,16 +53,13 @@ class WebSocketClient {
           const data = JSON.parse(event.data);
           console.log("📨 WebSocket message received:", data);
 
-          // Handle heartbeat response
           if (data.type === "pong") {
             return;
           }
 
-          // Notify callbacks
           const callbacks = this.messageCallbacks.get(data.type) || [];
           callbacks.forEach((cb) => cb(data));
 
-          // Also notify 'all' listeners
           const allCallbacks = this.messageCallbacks.get("all") || [];
           allCallbacks.forEach((cb) => cb(data));
         } catch (error) {
@@ -104,7 +100,6 @@ class WebSocketClient {
     }
   }
 
-  // Subscribe to specific message types
   on(type: string, callback: MessageCallback) {
     if (!this.messageCallbacks.has(type)) {
       this.messageCallbacks.set(type, []);
@@ -112,7 +107,6 @@ class WebSocketClient {
     this.messageCallbacks.get(type)!.push(callback);
   }
 
-  // Unsubscribe from message types
   off(type: string, callback: MessageCallback) {
     const callbacks = this.messageCallbacks.get(type);
     if (callbacks) {
@@ -123,7 +117,6 @@ class WebSocketClient {
     }
   }
 
-  // Subscribe to connection status
   onStatus(callback: StatusCallback) {
     this.statusCallbacks.push(callback);
   }
@@ -137,7 +130,7 @@ class WebSocketClient {
       if (this.ws?.readyState === WebSocket.OPEN) {
         this.send({ type: "ping" });
       }
-    }, 30000); // Every 30 seconds
+    }, 30000);
   }
 
   private stopHeartbeat() {
@@ -169,5 +162,4 @@ class WebSocketClient {
   }
 }
 
-// Export a singleton instance
 export const wsClient = new WebSocketClient();

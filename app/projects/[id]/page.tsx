@@ -97,7 +97,6 @@ export default function ProjectDetailPage({
   useEffect(() => {
     if (!currentUser) return;
 
-    // Connect WebSocket for real-time participant count updates
     wsClient.connect(currentUser.id);
 
     const handleParticipantUpdate = (data: any) => {

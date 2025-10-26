@@ -14,7 +14,6 @@ export async function GET(request: Request) {
   console.log("Error:", error || "none");
   console.log("Error Description:", error_description || "none");
 
-  // Handle OAuth errors from Google
   if (error) {
     console.error("❌ OAuth error from Google:", error, error_description);
     return NextResponse.redirect(
@@ -29,7 +28,6 @@ export async function GET(request: Request) {
     try {
       console.log("Exchanging code for session...");
 
-      // Exchange code for session
       const {
         data: { session },
         error: sessionError,
@@ -54,13 +52,11 @@ export async function GET(request: Request) {
         console.log("✓ Google OAuth successful! User:", session.user.email);
         console.log("→ Redirecting to /home");
 
-        // Google OAuth successful - redirect to home page
-        // User is already authenticated and email verified by Google
         return NextResponse.redirect(new URL("/home", requestUrl.origin));
       }
 
       console.log("⚠ No user in session");
-      // If no user, redirect to home and let the app handle it
+
       return NextResponse.redirect(new URL("/home", requestUrl.origin));
     } catch (error: any) {
       console.error("❌ Error in OAuth callback:", error);
@@ -72,6 +68,6 @@ export async function GET(request: Request) {
   }
 
   console.log("⚠ No code provided, redirecting to home");
-  // If no code, redirect to home
+
   return NextResponse.redirect(new URL("/", requestUrl.origin));
 }
