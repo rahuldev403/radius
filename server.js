@@ -188,5 +188,20 @@ app.prepare().then(() => {
   server.listen(port, () => {
     console.log(`🚀 Server ready on http://${hostname}:${port}`);
     console.log(`🔌 WebSocket server ready on ws://${hostname}:${port}/api/ws`);
+
+    // Start automated reminder checker (runs every 5 minutes)
+    console.log("⏰ Starting automated reminder checker...");
+    setInterval(async () => {
+      try {
+        console.log("🔍 Checking for pending reminders...");
+        const response = await fetch(
+          `http://${hostname}:${port}/api/reminders`
+        );
+        const data = await response.json();
+        console.log(`✅ Processed ${data.reminders?.length || 0} reminders`);
+      } catch (error) {
+        console.error("❌ Error checking reminders:", error);
+      }
+    }, 5 * 60 * 1000); // Run every 5 minutes
   });
 });

@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { useTranslation } from "@/lib/use-translation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
 import {
   MapPin,
   Calendar,
@@ -159,10 +160,13 @@ export function Sidebar() {
               className="cursor-pointer group"
               onClick={() => router.push("/home")}
             >
-              <img
+              <Image
                 src="/logo.png"
                 alt="Radius Logo"
-                className="w-14 h-14 rounded-lg object-contain transition-all duration-300"
+                width={56}
+                height={56}
+                className="rounded-lg"
+                style={{ width: "56px", height: "auto" }}
               />
             </motion.div>
           </div>

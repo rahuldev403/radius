@@ -12,6 +12,7 @@ import {
   MessageCircle,
   Maximize2,
   Minimize2,
+  Settings,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,6 +27,8 @@ type Message = {
 interface AIChatbotProps {
   variant?: "floating" | "navbar";
   isCollapsed?: boolean;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 const SUGGESTED_QUESTIONS = [
@@ -64,8 +67,10 @@ const PREDEFINED_ANSWERS: Record<string, string> = {
 export function AIChatbot({
   variant = "floating",
   isCollapsed = false,
+  isOpen: externalIsOpen,
+  onClose: externalOnClose,
 }: AIChatbotProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
@@ -79,6 +84,14 @@ export function AIChatbot({
   const [isTyping, setIsTyping] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Use external state if provided, otherwise use internal state
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+  const setIsOpen = externalOnClose
+    ? (value: boolean) => {
+        if (!value) externalOnClose();
+      }
+    : setInternalIsOpen;
 
   useEffect(() => {
     if (scrollRef.current) {

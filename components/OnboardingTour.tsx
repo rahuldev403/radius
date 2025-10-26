@@ -67,7 +67,7 @@ export function OnboardingTour({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10000]"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[10000]"
             onClick={handleSkipTour}
           />
 
@@ -79,19 +79,19 @@ export function OnboardingTour({
             transition={{ type: "spring", duration: 0.5 }}
             className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[10001] w-full max-w-lg mx-4"
           >
-            <Card className="shadow-2xl border-2 border-emerald-200">
+            <Card className="shadow-2xl border-2 border-emerald-500 bg-white dark:bg-slate-900">
               <CardContent className="p-0">
                 {/* Header */}
-                <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-emerald-50 to-teal-50">
+                <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-gradient-to-r from-emerald-500 to-teal-500">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-emerald-600 font-bold text-lg shadow-lg">
                       {currentStep + 1}
                     </div>
                     <div>
-                      <h3 className="font-bold text-lg text-gray-900">
+                      <h3 className="font-bold text-xl text-white">
                         {steps[currentStep].title}
                       </h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-white/90 font-semibold">
                         Step {currentStep + 1} of {steps.length}
                       </p>
                     </div>
@@ -100,20 +100,20 @@ export function OnboardingTour({
                     variant="ghost"
                     size="sm"
                     onClick={handleSkipTour}
-                    className="text-gray-500 hover:text-gray-700"
+                    className="text-white hover:text-white hover:bg-white/20"
                   >
                     <X className="w-5 h-5" />
                   </Button>
                 </div>
 
                 {/* Content */}
-                <div className="p-8">
+                <div className="p-8 bg-white dark:bg-slate-900">
                   <div className="mb-6 text-center">
-                    <div className="w-20 h-20 mx-auto mb-4 bg-emerald-100 rounded-full flex items-center justify-center">
+                    <div className="w-20 h-20 mx-auto mb-4 bg-emerald-100 dark:bg-emerald-900 rounded-full flex items-center justify-center">
                       {steps[currentStep].icon}
                     </div>
                   </div>
-                  <p className="text-gray-700 text-center leading-relaxed mb-6">
+                  <p className="text-gray-900 dark:text-white text-center text-lg font-medium leading-relaxed mb-6">
                     {steps[currentStep].description}
                   </p>
 
@@ -121,7 +121,7 @@ export function OnboardingTour({
                   {steps[currentStep].action && (
                     <Button
                       variant="outline"
-                      className="w-full mb-4"
+                      className="w-full mb-4 font-semibold"
                       onClick={steps[currentStep].action!.onClick}
                     >
                       {steps[currentStep].action!.label}
@@ -130,7 +130,7 @@ export function OnboardingTour({
                 </div>
 
                 {/* Progress Dots */}
-                <div className="px-8 pb-4 flex items-center justify-center gap-2">
+                <div className="px-8 pb-4 bg-white dark:bg-slate-900 flex items-center justify-center gap-2">
                   {steps.map((_, index) => (
                     <div
                       key={index}
@@ -139,14 +139,14 @@ export function OnboardingTour({
                           ? "w-8 bg-emerald-600"
                           : index < currentStep
                           ? "w-2 bg-emerald-400"
-                          : "w-2 bg-gray-300"
+                          : "w-2 bg-gray-300 dark:bg-gray-600"
                       }`}
                     />
                   ))}
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-gray-200 flex items-center justify-between gap-4">
+                <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900 flex items-center justify-between gap-4">
                   <Button
                     variant="outline"
                     onClick={handlePrevious}

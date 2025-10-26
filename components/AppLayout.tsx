@@ -30,12 +30,34 @@ export const useSidebar = () => useContext(SidebarContext);
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Check if current page should have sidebar
   const shouldShowSidebar = !pagesWithoutSidebar.includes(pathname);
 
   // Get sidebar width for margin
   const sidebarWidth = isCollapsed ? 80 : 280;
+
+  // Load saved sidebar state from localStorage on mount
+  useEffect(() => {
+    const savedState = localStorage.getItem("sidebarCollapsed");
+    if (savedState !== null) {
+      setIsCollapsed(savedState === "true");
+    } else {
+      // Auto-collapse on mobile for first time
+      if (window.innerWidth < 768) {
+        setIsCollapsed(true);
+      }
+    }
+    setIsInitialized(true);
+  }, []);
+
+  // Save sidebar state to localStorage whenever it changes
+  useEffect(() => {
+    if (isInitialized) {
+      localStorage.setItem("sidebarCollapsed", String(isCollapsed));
+    }
+  }, [isCollapsed, isInitialized]);
 
   useEffect(() => {
     // Auto-collapse on mobile
@@ -45,7 +67,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       }
     };
 
-    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);

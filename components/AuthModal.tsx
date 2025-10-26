@@ -102,7 +102,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
       setTimeout(() => {
         if (isProfileComplete) {
-          window.location.href = "/home";
+          window.location.href = "/dashboard";
         } else {
           window.location.href = "/account?onboarding=true";
         }
@@ -304,7 +304,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       alt="Radius Logo"
                       width={64}
                       height={64}
-                      className="rounded-lg object-cover"
+                      className="rounded-lg"
+                      style={{ width: "64px", height: "auto" }}
                     />
                   </div>
                 </div>

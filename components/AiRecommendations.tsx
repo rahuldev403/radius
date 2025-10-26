@@ -185,33 +185,40 @@ export function AiRecommendations() {
       <ScrollArea className="w-full whitespace-nowrap">
         <div className="flex w-max gap-4 pb-4">
           {recommendations.map((service) => (
-            <Link href={`/services/${service.id}`} key={service.id}>
-              <Card className="w-[320px] hover:shadow-xl transition-all hover:scale-105 cursor-pointer">
-                <CardHeader>
-                  <div className="flex items-start justify-between mb-2">
-                    <CardTitle className="text-lg line-clamp-1">
+            <Link
+              href={`/services/${service.id}`}
+              key={service.id}
+              className="no-underline"
+            >
+              <Card className="w-[320px] transition-shadow cursor-pointer hover:shadow-lg">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <CardTitle className="text-lg line-clamp-2 flex-1">
                       {service.title}
                     </CardTitle>
-                    <Badge variant="outline">{service.category}</Badge>
+                    <Badge variant="outline" className="shrink-0 text-xs">
+                      {service.category}
+                    </Badge>
                   </div>
-                  <CardDescription>
+                  <CardDescription className="line-clamp-1">
                     by {service.provider.full_name}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-700 line-clamp-2 mb-3">
+                <CardContent className="pt-0">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 mb-3">
                     {service.description}
                   </p>
-                  <div className="flex items-center gap-2 text-xs">
-                    <div className="flex items-center gap-1 text-emerald-600 font-medium">
-                      <Star className="w-3 h-3 fill-emerald-600" />
+                  <div className="flex flex-col gap-1.5 text-xs mb-3">
+                    <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+                      <Star className="w-3 h-3 fill-emerald-600 dark:fill-emerald-400 shrink-0" />
                       {Math.round(service.matchScore)}% match
                     </div>
-                    <span className="text-gray-400">•</span>
-                    <span className="text-gray-600">{service.matchReason}</span>
+                    <p className="text-gray-600 dark:text-gray-400 line-clamp-2">
+                      {service.matchReason}
+                    </p>
                   </div>
                   <Button
-                    className="w-full mt-3 bg-emerald-600 hover:bg-emerald-700"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700"
                     size="sm"
                   >
                     View Details

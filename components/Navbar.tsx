@@ -70,27 +70,29 @@ export function Navbar() {
     <>
       {/* Desktop Navbar */}
       <nav
-        className="fixed top-0 left-0 right-0 z-[9999] bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm"
+        className="fixed top-0 left-0 right-0 z-[9999] glass backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 shadow-lg"
         key={language}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div
-              className="flex items-center gap-2 cursor-pointer"
+              className="flex items-center gap-3 cursor-pointer group"
               onClick={() => router.push("/home")}
             >
               <div className="relative">
-                <Image
-                  src="/logo.png"
-                  alt="Radius Logo"
-                  width={40}
-                  height={40}
-                  className="rounded-lg object-cover"
-                />
-                <div className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform shadow-lg">
+                  📍
+                </div>
+                <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse" />
               </div>
-              <Badge variant="secondary" className="text-xs">
+              <span className="text-xl font-extrabold gradient-text">
+                Radius
+              </span>
+              <Badge
+                variant="secondary"
+                className="text-xs font-semibold bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-emerald-500/30"
+              >
                 Beta
               </Badge>
             </div>
