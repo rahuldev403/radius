@@ -108,6 +108,23 @@ export function OnboardingTour({
 
                 {/* Content */}
                 <div className="p-8 bg-white dark:bg-slate-900">
+                  {currentStep === 0 && (
+                    <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <div className="text-2xl">🚀</div>
+                        <div>
+                          <h4 className="font-bold text-blue-900 dark:text-blue-100 mb-1">
+                            Beta Version
+                          </h4>
+                          <p className="text-sm text-blue-800 dark:text-blue-200">
+                            We're now in beta! We're continuously changing the
+                            code to improve your experience. Take the tour for
+                            updates or skip it 😊
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className="mb-6 text-center">
                     <div className="w-20 h-20 mx-auto mb-4 bg-emerald-100 dark:bg-emerald-900 rounded-full flex items-center justify-center">
                       {steps[currentStep].icon}

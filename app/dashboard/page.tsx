@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { useTranslation } from "@/lib/use-translation";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { ProfileModal } from "@/components/ProfileModal";
 import { CreateServiceModal } from "@/components/CreateServiceModal";
@@ -40,6 +41,7 @@ import Image from "next/image";
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [user, setUser] = useState<any>(null);
   const [authUser, setAuthUser] = useState<any>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -135,9 +137,8 @@ export default function DashboardPage() {
 
       setUserBadges(badges);
 
-      // Check if user needs onboarding
-      const hasSeenTour = localStorage.getItem("hasSeenTour");
-      if (!hasSeenTour) {
+      const hasCompletedTour = localStorage.getItem("tourCompleted");
+      if (!hasCompletedTour && profile) {
         setShowTour(true);
       }
     } catch (error) {
@@ -350,45 +351,84 @@ export default function DashboardPage() {
 
   const tourSteps = [
     {
-      title: "Welcome to Radius!",
+      title: "Welcome to Radius",
       description:
-        "Your all-in-one skill-sharing platform. Discover services, book appointments, and connect with professionals in your area. Let's take a quick tour!",
+        "Your all-in-one skill-sharing platform where you can discover local services, book appointments, and connect with talented professionals. Let's explore what makes Radius special!",
       icon: <Sparkles className="w-10 h-10 text-emerald-600" />,
     },
     {
-      title: "Explore the Map",
+      title: "Interactive Map Discovery",
       description:
-        "Find skilled professionals near you using our interactive geolocation map. Filter by radius and see real-time availability.",
+        "Find skilled professionals near you using our powerful geolocation map. Filter by distance, category, and see real-time availability. Never miss a nearby service again!",
       icon: <MapPin className="w-10 h-10 text-blue-600" />,
       action: {
-        label: "Open Map Now",
+        label: "Explore Map",
         onClick: () => {
-          localStorage.setItem("hasSeenTour", "true");
+          localStorage.setItem("tourCompleted", "true");
           router.push("/home");
         },
       },
     },
     {
-      title: "Book & Manage",
+      title: "Smart Booking System",
       description:
-        "Easily book sessions, chat with providers, and even join video calls directly from your bookings page. Stay organized with your schedule.",
+        "Book sessions with just a few clicks. Manage all your appointments in one place, check availability, and get instant confirmation. Stay organized with our calendar integration.",
       icon: <Calendar className="w-10 h-10 text-purple-600" />,
+      action: {
+        label: "View My Bookings",
+        onClick: () => router.push("/my-bookings"),
+      },
     },
     {
-      title: "Real-time Communication",
+      title: "Real-time Chat & Video",
       description:
-        "Chat instantly with service providers and clients. Share details, discuss requirements, and coordinate seamlessly.",
+        "Chat instantly with service providers using our built-in messaging system. Schedule video calls for consultations or remote sessions - all within the platform!",
       icon: <MessageSquare className="w-10 h-10 text-green-600" />,
     },
     {
-      title: "Build Your Reputation",
+      title: "Credit System & Rewards",
       description:
-        "Earn reviews and ratings. Create your own services and start earning by sharing your skills with your community.",
+        "Earn credits by providing services, completing bookings, and helping others. Use credits to book services or give them as tips. Build your reputation and unlock badges!",
+      icon: <Coins className="w-10 h-10 text-amber-600" />,
+      action: {
+        label: "View My Credits",
+        onClick: () => router.push("/credits"),
+      },
+    },
+    {
+      title: "Community Projects",
+      description:
+        "Join collaborative community projects! Work with others on shared goals, contribute your skills, and make a difference in your local community.",
+      icon: <Users className="w-10 h-10 text-indigo-600" />,
+      action: {
+        label: "Browse Projects",
+        onClick: () => router.push("/projects"),
+      },
+    },
+    {
+      title: "Build Your Profile",
+      description:
+        "Create your professional profile, showcase your skills, and earn reviews. The better your rating, the more opportunities come your way. Start building your reputation today!",
       icon: <Star className="w-10 h-10 text-yellow-600" />,
       action: {
-        label: "Create Your First Service",
+        label: "Edit My Profile",
         onClick: () => {
-          localStorage.setItem("hasSeenTour", "true");
+          setIsProfileModalOpen(true);
+          setShowTour(false);
+          localStorage.setItem("tourCompleted", "true");
+        },
+      },
+    },
+    {
+      title: "Offer Your Services",
+      description:
+        "Ready to earn? Create your first service listing! Set your rates, availability, and service areas. Share your talents and start making money in your community.",
+      icon: <Target className="w-10 h-10 text-rose-600" />,
+      action: {
+        label: "Create Service",
+        onClick: () => {
+          localStorage.setItem("tourCompleted", "true");
+          setShowTour(false);
           setIsCreateModalOpen(true);
         },
       },
@@ -396,33 +436,35 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 p-3 sm:p-4 md:p-6">
       {/* Onboarding Tour */}
       {showTour && (
         <OnboardingTour
           steps={tourSteps}
           onComplete={() => {
             setShowTour(false);
-            localStorage.setItem("hasSeenTour", "true");
-            toast.success("Welcome aboard! Let's explore Radius together.");
+            localStorage.setItem("tourCompleted", "true");
+            toast.success("Welcome aboard! You're all set to explore Radius.");
           }}
           onSkip={() => {
             setShowTour(false);
-            localStorage.setItem("hasSeenTour", "true");
-            toast.info("You can always find help in the AI chatbot!");
+            localStorage.setItem("tourCompleted", "true");
+            toast.info(
+              "Tour skipped! You can ask the AI chatbot anytime for help."
+            );
           }}
         />
       )}
 
-      <div className="pt-10 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <div className="pt-4 sm:pt-6 lg:pt-10 pb-8 sm:pb-10 lg:pb-12 px-3 sm:px-4 lg:px-8 max-w-7xl mx-auto">
         {/* Hero Banner with Video */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-8"
+          className="mb-6 sm:mb-8"
         >
-          <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl">
+          <div className="relative w-full rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl">
             {/* Background Video */}
             <video autoPlay loop muted playsInline className="w-full h-auto">
               <source src="/banner.mp4" type="video/mp4" />
@@ -435,31 +477,30 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-8"
+          className="mb-6 sm:mb-8"
         >
           <Card className="glass-card border-0 overflow-hidden">
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex flex-col md:flex-row items-center md:items-start gap-4 sm:gap-6">
                 {/* Avatar with Badge Overlay */}
                 <div className="relative">
-                  <Avatar className="w-24 h-24 border-4 border-emerald-500 shadow-xl">
+                  <Avatar className="w-20 h-20 sm:w-24 sm:h-24 border-4 border-emerald-500 shadow-xl">
                     <AvatarImage src={user?.avatar_url} />
-                    <AvatarFallback className="text-2xl font-bold bg-gradient-to-br from-emerald-500 to-teal-500 text-white">
+                    <AvatarFallback className="text-xl sm:text-2xl font-bold bg-gradient-to-br from-emerald-500 to-teal-500 text-white">
                       {user?.full_name?.charAt(0) || "U"}
                     </AvatarFallback>
                   </Avatar>
 
                   {/* Badge Tier Overlay */}
                   {badgeTier && (
-                    <div className="absolute -top-3 -right-3 z-10">
+                    <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 z-10">
                       <div className="relative group">
                         <Image
                           src={badgeTier.image}
                           alt={`${badgeTier.name} Badge`}
-                          width={48}
-                          height={48}
-                          className="drop-shadow-2xl animate-pulse hover:animate-none transition-all hover:scale-110"
-                          style={{ width: "48px", height: "auto" }}
+                          width={40}
+                          height={40}
+                          className="w-10 h-10 sm:w-12 sm:h-12 drop-shadow-2xl animate-pulse hover:animate-none transition-all hover:scale-110"
                         />
                         {/* Tooltip */}
                         <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
@@ -539,7 +580,7 @@ export default function DashboardPage() {
                   className="flex items-center gap-2"
                 >
                   <Edit className="w-4 h-4" />
-                  Edit Profile
+                  {t("editProfile")}
                 </Button>
               </div>
 
@@ -629,7 +670,7 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
           {statCards.map((stat, index) => (
             <motion.div
               key={stat.title}
@@ -680,14 +721,12 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle className="text-2xl font-bold flex items-center gap-2">
                 <Target className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                Quick Actions
+                {t("quickActions")}
               </CardTitle>
-              <CardDescription>
-                Get things done faster with these shortcuts
-              </CardDescription>
+              <CardDescription>{t("getFasterShortcuts")}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {quickActions.map((action, index) => (
                   <motion.button
                     key={action.title}
@@ -716,7 +755,7 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Recent Activity */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -727,9 +766,9 @@ export default function DashboardPage() {
               <CardHeader>
                 <CardTitle className="text-2xl font-bold flex items-center gap-2">
                   <TrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                  Recent Activity
+                  {t("recentActivity")}
                 </CardTitle>
-                <CardDescription>Your latest interactions</CardDescription>
+                <CardDescription>{t("yourLatestInteractions")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {recentActivities.length > 0 ? (
@@ -779,9 +818,11 @@ export default function DashboardPage() {
               <CardHeader>
                 <CardTitle className="text-2xl font-bold flex items-center gap-2">
                   <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                  Upcoming Bookings
+                  {t("upcomingBookings")}
                 </CardTitle>
-                <CardDescription>Your scheduled appointments</CardDescription>
+                <CardDescription>
+                  {t("yourScheduledAppointments")}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {upcomingBookings.length > 0 ? (
@@ -847,14 +888,12 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle className="text-2xl font-bold flex items-center gap-2">
                 <Sparkles className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                Platform Features
+                {t("platformFeatures")}
               </CardTitle>
-              <CardDescription>
-                Explore everything Radius has to offer
-              </CardDescription>
+              <CardDescription>{t("exploreEverything")}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
                 {features.map((feature, index) => (
                   <motion.div
                     key={feature.title}

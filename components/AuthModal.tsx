@@ -214,10 +214,19 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setLoading(true);
 
     try {
+      const redirectUrl =
+        typeof window !== "undefined"
+          ? `${window.location.origin}/auth/callback`
+          : `${
+              process.env.NEXT_PUBLIC_SITE_URL ||
+              process.env.NEXT_PUBLIC_VERCEL_URL ||
+              "http://localhost:3000"
+            }/auth/callback`;
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: redirectUrl,
         },
       });
 

@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { useGeolocation } from "../hooks/use-geolocation";
+import { useTranslation } from "@/lib/use-translation";
 import { AiRecommendations } from "@/components/AiRecommendations";
 import { CreateServiceModal } from "@/components/CreateServiceModal";
 
@@ -44,6 +45,7 @@ type Service = {
 
 export default function HomePage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { data: location, error: geoError, getGeolocation } = useGeolocation();
 
   const [services, setServices] = useState<Service[]>([]);

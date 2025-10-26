@@ -4,8 +4,8 @@ import { usePathname } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { motion } from "framer-motion";
 import { useState, useEffect, createContext, useContext } from "react";
+import { useAccessibility } from "@/lib/accessibility-context";
 
-// Pages that should NOT have the sidebar
 const pagesWithoutSidebar = [
   "/",
   "/auth/callback",
@@ -18,41 +18,48 @@ const pagesWithoutSidebar = [
 interface SidebarContextType {
   isCollapsed: boolean;
   setIsCollapsed: (collapsed: boolean) => void;
+  isMobileMenuOpen: boolean;
+  setIsMobileMenuOpen: (open: boolean) => void;
 }
 
 const SidebarContext = createContext<SidebarContextType>({
   isCollapsed: false,
   setIsCollapsed: () => {},
+  isMobileMenuOpen: false,
+  setIsMobileMenuOpen: () => {},
 });
 
 export const useSidebar = () => useContext(SidebarContext);
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { settings } = useAccessibility();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Check if current page should have sidebar
   const shouldShowSidebar = !pagesWithoutSidebar.includes(pathname);
 
-  // Get sidebar width for margin
   const sidebarWidth = isCollapsed ? 80 : 280;
 
-  // Load saved sidebar state from localStorage on mount
   useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    checkMobile();
     const savedState = localStorage.getItem("sidebarCollapsed");
     if (savedState !== null) {
       setIsCollapsed(savedState === "true");
     } else {
-      // Auto-collapse on mobile for first time
-      if (window.innerWidth < 768) {
+      if (window.innerWidth < 1024) {
         setIsCollapsed(true);
       }
     }
     setIsInitialized(true);
   }, []);
 
-  // Save sidebar state to localStorage whenever it changes
   useEffect(() => {
     if (isInitialized) {
       localStorage.setItem("sidebarCollapsed", String(isCollapsed));
@@ -60,10 +67,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }, [isCollapsed, isInitialized]);
 
   useEffect(() => {
-    // Auto-collapse on mobile
     const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setIsCollapsed(true);
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (mobile) {
+        setIsMobileMenuOpen(false);
       }
     };
 
@@ -71,26 +79,44 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+  }, [isMobileMenuOpen]);
+
   if (!shouldShowSidebar) {
-    return <>{children}</>;
+    return <div key={settings.language}>{children}</div>;
   }
 
   return (
-    <SidebarContext.Provider value={{ isCollapsed, setIsCollapsed }}>
-      <Sidebar />
-      <motion.main
-        initial={false}
-        animate={{
-          marginLeft: `${sidebarWidth}px`,
-        }}
-        transition={{
-          duration: 0.3,
-          ease: "easeInOut",
-        }}
-        className="min-h-screen"
-      >
-        {children}
-      </motion.main>
+    <SidebarContext.Provider
+      value={{
+        isCollapsed,
+        setIsCollapsed,
+        isMobileMenuOpen,
+        setIsMobileMenuOpen,
+      }}
+    >
+      <div key={settings.language}>
+        <Sidebar />
+        <motion.main
+          initial={false}
+          animate={{
+            marginLeft: isMobile ? 0 : `${sidebarWidth}px`,
+            paddingTop: isMobile ? "64px" : 0,
+          }}
+          transition={{
+            duration: 0.3,
+            ease: "easeInOut",
+          }}
+          className="min-h-screen"
+        >
+          {children}
+        </motion.main>
+      </div>
     </SidebarContext.Provider>
   );
 }

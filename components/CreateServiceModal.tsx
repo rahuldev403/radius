@@ -103,7 +103,7 @@ export function CreateServiceModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="relative w-full max-w-5xl h-[600px] bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden flex"
+            className="relative w-full max-w-5xl h-[90vh] sm:h-[600px] bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden flex"
           >
             {/* Close Button */}
             <button
@@ -115,7 +115,7 @@ export function CreateServiceModal({
             </button>
 
             {/* Left Side - Form */}
-            <div className="flex-1 p-8 overflow-y-auto">
+            <div className="w-full lg:flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
               <div className="max-w-md mx-auto">
                 {/* Header */}
                 <div className="mb-8">

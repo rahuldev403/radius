@@ -149,6 +149,63 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser!
 
+## 🌐 Deployment Configuration
+
+### Vercel Deployment
+
+1. **Set Environment Variable in Vercel Dashboard**
+
+Go to your Vercel project settings → Environment Variables and add:
+
+```env
+NEXT_PUBLIC_SITE_URL=https://radius-h9zo.vercel.app
+```
+
+**Important:** This variable tells the app what URL to use for OAuth redirects.
+
+2. **Configure Supabase Redirect URLs**
+
+In your Supabase Dashboard → Authentication → URL Configuration, add these URLs:
+
+**Site URL:**
+
+```
+https://radius-h9zo.vercel.app
+```
+
+**Redirect URLs (add all of these):**
+
+```
+https://radius-h9zo.vercel.app/auth/callback
+https://radius-h9zo.vercel.app/
+http://localhost:3000/auth/callback
+http://localhost:3000/
+```
+
+3. **Update Google OAuth Settings**
+
+In Google Cloud Console → APIs & Services → Credentials:
+
+**Authorized JavaScript origins:**
+
+```
+https://radius-h9zo.vercel.app
+```
+
+**Authorized redirect URIs:**
+
+```
+https://radius-h9zo.vercel.app/auth/callback
+```
+
+4. **Redeploy**
+
+After updating environment variables in Vercel, trigger a new deployment:
+
+- Go to Vercel Dashboard → Deployments → Redeploy
+
+**✅ Your OAuth should now work correctly on the deployed site!**
+
 ## 🗂️ Project Structure
 
 ```
