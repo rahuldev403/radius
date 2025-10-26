@@ -3,7 +3,17 @@
  * Handles OTP generation, storage, and verification
  */
 
-import { supabase } from "./supabase";
+import { createClient } from "@supabase/supabase-js";
+
+// Use a server-side client with service role if available to bypass RLS for OTP table
+const supabaseServer = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  (process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) as string,
+  {
+    auth: { persistSession: false, autoRefreshToken: false },
+  }
+);
 
 /**
  * Generate a 6-digit OTP
@@ -26,10 +36,10 @@ export async function storeOTP(
 
   try {
     // Delete any existing OTPs for this email
-    await supabase.from("email_otps").delete().eq("email", email);
+    await supabaseServer.from("email_otps").delete().eq("email", email);
 
     // Insert new OTP
-    const { error } = await supabase.from("email_otps").insert({
+    const { error } = await supabaseServer.from("email_otps").insert({
       email,
       otp,
       expires_at: expiresAt.toISOString(),
@@ -61,7 +71,7 @@ export async function verifyOTP(
 }> {
   try {
     // Get OTP from database
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServer
       .from("email_otps")
       .select("*")
       .eq("email", email)
@@ -78,12 +88,12 @@ export async function verifyOTP(
 
     if (now > expiresAt) {
       // Delete expired OTP
-      await supabase.from("email_otps").delete().eq("email", email);
+      await supabaseServer.from("email_otps").delete().eq("email", email);
       return { success: false, error: "OTP has expired", expired: true };
     }
 
     // Delete used OTP
-    await supabase.from("email_otps").delete().eq("email", email);
+    await supabaseServer.from("email_otps").delete().eq("email", email);
 
     return { success: true };
   } catch (error: any) {
