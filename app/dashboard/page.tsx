@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import { supabase } from "@/lib/supabase";
 import { useTranslation } from "@/lib/use-translation";
 import { OnboardingTour } from "@/components/OnboardingTour";
@@ -42,8 +43,8 @@ import Image from "next/image";
 export default function DashboardPage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { user: clerkUser, isLoaded } = useUser();
   const [user, setUser] = useState<any>(null);
-  const [authUser, setAuthUser] = useState<any>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [stats, setStats] = useState({
@@ -61,50 +62,85 @@ export default function DashboardPage() {
   const [upcomingBookings, setUpcomingBookings] = useState<any[]>([]);
 
   useEffect(() => {
-    checkUser();
-  }, []);
+    if (isLoaded) {
+      checkUser();
+    }
+  }, [isLoaded, clerkUser]);
 
   const checkUser = async () => {
     try {
-      const {
-        data: { user: authUser },
-      } = await supabase.auth.getUser();
-
-      if (!authUser) {
+      if (!clerkUser) {
         router.push("/");
         return;
       }
 
-      setAuthUser(authUser);
-
-      const { data: profile } = await supabase
+      // Fetch or create profile in Supabase using Clerk user ID
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", authUser.id)
+        .eq("id", clerkUser.id)
         .single();
 
-      setUser(profile);
+      if (profileError && profileError.code === 'PGRST116') {
+        // Profile doesn't exist, create it
+        const { data: newProfile, error: insertError } = await supabase
+          .from("profiles")
+          .insert({
+            id: clerkUser.id,
+            email: clerkUser.emailAddresses[0]?.emailAddress,
+            full_name: clerkUser.fullName || '',
+            avatar_url: clerkUser.imageUrl || '',
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error("Error creating profile:", insertError);
+          toast.error("Failed to create profile");
+          return;
+        }
+
+        setUser(newProfile);
+        
+        // If profile was just created, show onboarding
+        if (!newProfile?.location || !newProfile?.full_name) {
+          router.push("/account?onboarding=true");
+          return;
+        }
+      } else if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        toast.error("Failed to load profile");
+        return;
+      } else {
+        setUser(profile);
+        
+        // Check if profile is incomplete
+        if (!profile?.location || !profile?.full_name) {
+          router.push("/account?onboarding=true");
+          return;
+        }
+      }
 
       // Fetch user stats
       const { data: bookings } = await supabase
         .from("bookings")
         .select("*")
-        .or(`provider_id.eq.${authUser.id},seeker_id.eq.${authUser.id}`);
+        .or(`provider_id.eq.${clerkUser.id},seeker_id.eq.${clerkUser.id}`);
 
       const { data: services } = await supabase
         .from("services")
         .select("*")
-        .eq("provider_id", authUser.id);
+        .eq("provider_id", clerkUser.id);
 
       const { data: reviews } = await supabase
         .from("reviews")
         .select("rating")
-        .eq("reviewee_id", authUser.id);
+        .eq("reviewee_id", clerkUser.id);
 
       const { data: messages } = await supabase
         .from("messages")
         .select("id")
-        .or(`sender_id.eq.${authUser.id},receiver_id.eq.${authUser.id}`);
+        .or(`sender_id.eq.${clerkUser.id},receiver_id.eq.${clerkUser.id}`);
 
       const avgRating = reviews?.length
         ? reviews.reduce((acc: number, r: any) => acc + r.rating, 0) /
@@ -933,7 +969,7 @@ export default function DashboardPage() {
           setIsProfileModalOpen(false);
           checkUser(); // Refresh user data after profile update
         }}
-        user={authUser}
+        user={clerkUser}
       />
       <CreateServiceModal
         isOpen={isCreateModalOpen}

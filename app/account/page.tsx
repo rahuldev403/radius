@@ -1,37 +1,26 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { User } from "@supabase/supabase-js";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { useUser } from "@clerk/nextjs";
 import { ProfileModal } from "@/components/ProfileModal";
 
 function AccountPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isOnboarding = searchParams.get("onboarding") === "true";
-  const [user, setUser] = useState<User | null>(null);
+  const { user, isLoaded } = useUser();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    checkUser();
-  }, [isOnboarding]);
-
-  const checkUser = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      router.push("/");
-      return;
+    if (isLoaded) {
+      if (!user) {
+        router.push("/");
+        return;
+      }
+      setIsModalOpen(true);
     }
-
-    setUser(user);
-
-    // Always open modal for account page
-    setIsModalOpen(true);
-  };
+  }, [user, isLoaded, router]);
 
   return (
     <div>

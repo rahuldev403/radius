@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { User } from "@supabase/supabase-js";
+import type { UserResource } from "@clerk/types";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGeolocation } from "../app/hooks/use-geolocation";
@@ -23,7 +23,7 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 interface ProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user: User | null;
+  user: UserResource | null | undefined;
   isOnboarding?: boolean;
 }
 
@@ -307,7 +307,7 @@ export function ProfileModal({
                                 .join("")
                                 .toUpperCase()
                                 .slice(0, 2)
-                            : user?.email?.[0].toUpperCase() || "U"}
+                            : user?.emailAddresses?.[0]?.emailAddress?.[0]?.toUpperCase() || "U"}
                         </AvatarFallback>
                       </Avatar>
                       <button
@@ -343,7 +343,7 @@ export function ProfileModal({
                     <Input
                       id="email"
                       type="email"
-                      value={user?.email || ""}
+                      value={user?.emailAddresses?.[0]?.emailAddress || ""}
                       disabled
                       className="bg-gray-50 dark:bg-gray-800"
                     />

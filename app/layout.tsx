@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AppLayout } from "@/components/AppLayout";
 import { AccessibilityProvider } from "@/lib/accessibility-context";
 import { AccessibilityButton } from "@/components/AccessibilityButton";
+import { ClerkProvider } from '@clerk/nextjs'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,20 +37,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head />
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <AccessibilityProvider>
-          <a href="#main-content" className="skip-to-content">
-            Skip to main content
-          </a>
-          <AppLayout>{children}</AppLayout>
-          <AccessibilityButton />
-          <Toaster />
-        </AccessibilityProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" suppressHydrationWarning>
+        <head />
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
+          <AccessibilityProvider>
+            <a href="#main-content" className="skip-to-content">
+              Skip to main content
+            </a>
+            <AppLayout>{children}</AppLayout>
+            <AccessibilityButton />
+            <Toaster />
+          </AccessibilityProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
