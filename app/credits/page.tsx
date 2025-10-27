@@ -255,9 +255,9 @@ export default function CreditsPage() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           {/* Transaction History */}
-          <div className="lg:col-span-2">
+          <div>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -362,11 +362,11 @@ export default function CreditsPage() {
               </CardContent>
             </Card>
           </div>
+        </div>
 
-          {/* Badges Section */}
-          <div>
-            {currentUser && <UserBadges userId={currentUser.id} showTitle />}
-          </div>
+        {/* Badges & Achievements Row */}
+        <div className="mt-6">
+          {currentUser && <UserBadges userId={currentUser.id} showTitle />}
         </div>
       </motion.div>
     </div>

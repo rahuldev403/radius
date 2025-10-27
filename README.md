@@ -8,20 +8,6 @@
 [![Supabase](https://img.shields.io/badge/Supabase-Database-3ecf8e?style=for-the-badge&logo=supabase)](https://supabase.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38bdf8?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 
-## 🚀 Ready to Deploy!
-
-This app is **production-ready** and configured for deployment on:
-
-- **Vercel** (Next.js App)
-- **Railway** (WebSocket Server)
-- **Supabase** (Database)
-
-👉 **[Start Deployment Guide →](STEP_BY_STEP_DEPLOYMENT.md)**
-
-📋 **[Quick Reference Card →](QUICK_REFERENCE_CARD.md)**
-
----
-
 ## 🌟 What is Radius?
 
 **Radius** is a revolutionary hyperlocal platform that connects neighbors based on skills and location. Whether you're looking for a guitar teacher, a web developer, or a personal trainer in your neighborhood, Radius makes it effortless to find and connect with talented people nearby.
@@ -38,6 +24,53 @@ This app is **production-ready** and configured for deployment on:
 - 🏆 **Credit System** - Earn credits by providing services
 - ♿ **Accessibility First** - High contrast, screen reader friendly, dyslexia support
 - 🌍 **Interactive Maps** - Leaflet-powered location visualization
+
+## 🚀 Quick Start (Local Development)
+
+### Prerequisites
+
+- Node.js 18+ installed
+- Supabase account
+- Gmail account for SMTP (or any SMTP provider)
+
+### 1. Clone & Install
+
+```bash
+git clone <your-repo-url>
+cd your-skill-app
+npm install
+```
+
+### 2. Environment Setup
+
+Copy `.env.local.example` to `.env.local` and fill in your values:
+
+```bash
+cp .env.local.example .env.local
+```
+
+**Required variables:**
+
+- `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key
+- `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key (for user creation)
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` - Email configuration
+
+### 3. Database Setup
+
+Run the schema in your Supabase SQL editor:
+
+```bash
+# Use supabase-schema.sql file
+```
+
+### 4. Run Development Server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000)
 
 ## 🚀 Features
 

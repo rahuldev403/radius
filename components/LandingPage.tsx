@@ -291,7 +291,8 @@ export default function LandingPage() {
     {
       step: "1",
       title: "Create Your Profile",
-      description: "Sign up and showcase your skills or discover local talents",
+      description:
+        "Explore the platform and showcase your skills or discover local talents",
       icon: FileText,
     },
     {
@@ -373,7 +374,7 @@ export default function LandingPage() {
             </p>
 
             {/* CTA Buttons */}
-            <div className="hero-buttons flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center mb-10">
+            <div className="hero-buttons flex justify-center lg:justify-start items-center mb-10">
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -381,24 +382,10 @@ export default function LandingPage() {
                 <Button
                   onClick={() => setIsAuthModalOpen(true)}
                   size="lg"
-                  className="gradient-primary text-white px-10 py-6 text-lg font-bold shadow-2xl shadow-emerald-500/30 rounded-2xl hover:shadow-emerald-500/50 transition-all duration-300"
-                >
-                  Get Started Free
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </motion.div>
-
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button
-                  onClick={() => setIsAuthModalOpen(true)}
-                  size="lg"
-                  variant="outline"
-                  className="glass-card px-10 py-6 text-lg font-bold border-2 border-emerald-500/50 hover:border-emerald-500 rounded-2xl"
+                  className="gradient-primary text-white px-12 py-7 text-lg font-bold shadow-2xl shadow-emerald-500/30 rounded-2xl hover:shadow-emerald-500/50 transition-all duration-300"
                 >
                   Sign In
+                  <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </motion.div>
             </div>
@@ -734,7 +721,7 @@ export default function LandingPage() {
                   size="lg"
                   className="bg-white text-emerald-600 hover:bg-slate-100 px-12 py-7 text-xl font-bold shadow-2xl rounded-2xl"
                 >
-                  Start Your Journey
+                  Sign In to Demo
                   <ArrowRight className="ml-3 w-6 h-6" />
                 </Button>
               </motion.div>

@@ -288,7 +288,7 @@ export function ProjectManagementModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-hidden flex flex-col bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div>

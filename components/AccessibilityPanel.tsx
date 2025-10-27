@@ -382,36 +382,49 @@ export function AccessibilityPanel({
                 </Card>
 
                 {/* Language Settings */}
-                <Card>
+                <Card className="relative">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Globe className="w-5 h-5 text-purple-600" />
                       Language
+                      <Badge className="ml-auto bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-800">
+                        Coming Soon
+                      </Badge>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {languages.map((lang) => (
-                        <button
-                          key={lang.code}
-                          onClick={() =>
-                            updateSettings({ language: lang.code })
-                          }
-                          className={`p-3 rounded-lg border-2 transition-all ${
-                            settings.language === lang.code
-                              ? "border-purple-600 bg-purple-50 ring-2 ring-purple-200"
-                              : "border-gray-200 hover:border-purple-300 hover:bg-purple-50/50"
-                          }`}
-                        >
-                          <div className="text-2xl mb-1">{lang.flag}</div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {lang.name}
-                          </div>
-                          {settings.language === lang.code && (
-                            <Check className="w-4 h-4 mx-auto mt-1 text-purple-600" />
-                          )}
-                        </button>
-                      ))}
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gray-100/50 dark:bg-gray-800/50 backdrop-blur-sm z-10 rounded-lg flex items-center justify-center">
+                        <div className="text-center p-4">
+                          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            🌍 Multi-language Support Coming Soon!
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            We're working on bringing this feature to you.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 opacity-30 pointer-events-none">
+                        {languages.map((lang) => (
+                          <button
+                            key={lang.code}
+                            disabled
+                            className={`p-3 rounded-lg border-2 transition-all ${
+                              settings.language === lang.code
+                                ? "border-purple-600 bg-purple-50 ring-2 ring-purple-200"
+                                : "border-gray-200"
+                            }`}
+                          >
+                            <div className="text-2xl mb-1">{lang.flag}</div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {lang.name}
+                            </div>
+                            {settings.language === lang.code && (
+                              <Check className="w-4 h-4 mx-auto mt-1 text-purple-600" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

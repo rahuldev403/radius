@@ -156,10 +156,10 @@ export function CreateServiceModal({
                       onValueChange={setCategory}
                       required
                     >
-                      <SelectTrigger className="text-base">
+                      <SelectTrigger className="text-base bg-white dark:bg-gray-800">
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
-                      <SelectContent className="z-[99999]">
+                      <SelectContent className="z-[99999] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
                         {categories.map((cat) => (
                           <SelectItem key={cat} value={cat}>
                             {cat}
